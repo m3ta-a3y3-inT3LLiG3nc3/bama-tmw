@@ -22,19 +22,21 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    var story: String { switch self { case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
+    var story: String { switch self { case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
+    @AppStorage("appearance") private var appearance = Appearance.system.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 900, minHeight: 600) }
+        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         Settings { SettingsView().environment(store).environment(bots) }
     }
 }
@@ -42,16 +44,22 @@ struct M3taOSConsoleApp: App {
 struct RootView: View {
     @Environment(Store.self) var store
     @Environment(BotStore.self) var bots
-    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .status
+    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .overview
     var body: some View {
         NavigationSplitView {
-            List(Screen.allCases, selection: $sel) { s in Label("\(s.rawValue)", systemImage: s.icon).tag(s) }
-                .navigationSplitViewColumnWidth(200)
+            List(selection: $sel) {
+                BrandHeader().listRowSeparator(.hidden)
+                ForEach(Screen.groups, id: \.0) { g in
+                    Section(g.0) { ForEach(g.1) { s in Label(s.rawValue, systemImage: s.icon).tag(s).accessibilityHint("Shows the \(s.rawValue) screen") } }
+                }
+            }
+            .navigationSplitViewColumnWidth(min: 190, ideal: 220)
         } detail: {
             if let st = store.state {
                 VStack(alignment: .leading, spacing: 0) {
-                    AgeBanner(state: st)
-                    switch sel ?? .status {
+                    if sel != .overview { AgeBanner(state: st) }
+                    switch sel ?? .overview {
+                    case .overview: OverviewView()
                     case .status: StatusView(s: st)
                     case .pairing: PairingView(s: st)
                     case .result: ResultView(s: st)
@@ -61,6 +69,7 @@ struct RootView: View {
                     case .copilot: CopilotStub()
                     }
                 }
+            } else if store.state == nil && store.error == nil { ProgressView("Loading snapshot…")
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
         .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh() } }
@@ -73,7 +82,9 @@ struct AgeBanner: View {
         VStack(alignment: .leading, spacing: 2) {
             Label(SnapshotAge.describe(state.capturedAt), systemImage: "clock").font(.callout.weight(.medium))
             Text("Source: \(state.source)").font(.caption).foregroundStyle(.secondary).lineLimit(2)
-        }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(.yellow.opacity(0.15))
+        }.padding(10).frame(maxWidth: .infinity, alignment: .leading)
+         .background(Color.m3taGold.opacity(0.12)).overlay(alignment: .leading) { Rectangle().fill(Color.m3taGold).frame(width: 3) }
+         .accessibilityElement(children: .combine)
     }
 }
 
@@ -206,10 +217,12 @@ struct SettingsView: View {
     @Environment(BotStore.self) var bots
     @AppStorage("meshStatePath") private var path = ""
     @AppStorage("botMapPath") private var botPath = ""
+    @AppStorage("appearance") private var appearance = Appearance.system.rawValue
     var body: some View {
         Form {
             TextField("MeshState JSON path (empty = bundled fixture)", text: $path)
             Text("Loaded from: \(store.sourcePath ?? "none")").font(.caption)
+            Picker("Appearance", selection: $appearance) { ForEach(Appearance.allCases) { Text($0.rawValue).tag($0.rawValue) } }
             TextField("Bot map JSON path (empty = bundled copy)", text: $botPath)
             Text("Bot map from: \(bots.sourcePath)").font(.caption)
             Button("Reload") { store.refresh(); bots.refresh() }
