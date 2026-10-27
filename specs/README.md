@@ -53,6 +53,7 @@ Specs written for M3ta's own builds in this fork, same five-part format.
 | Spec | What it does | Replaces |
 | --- | --- | --- |
 | [m3ta-os-console.md](m3ta-os-console.md) | Mesh and Pluto status, Ruth Local pairing walk-through, approval-gated task dispatch to Pluto | hirepluto.ai Manage pages, the written MVP status map |
+| [m3ta-tasks.md](m3ta-tasks.md) | Native to-do app cloning Todoist's structure: Inbox, Today, Completed, local data (working title "M3taTasks"; screen index pending capture) | Todoist, for personal task capture on the Mac |
 
 Its seed state fixture is [fixtures/mesh-state-2026-10-26.json](fixtures/mesh-state-2026-10-26.json): the 2026-10-22 MVP status map plus the 2026-10-26 Pluto inventory, as one JSON snapshot.
 
