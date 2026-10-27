@@ -15,6 +15,17 @@ extension Color {
     // Legacy names kept so call sites stay stable; now mapped to TMW tokens.
     static let m3taNavy = Color(hex: TMWTokens.onyx)       // brand mark fill
     static let m3taGold = tmw(\.accent)                    // primary accent: cosmic red
+    static func adaptive(dark: Int, light: Int) -> Color {
+        Color(nsColor: NSColor(name: nil) { a in
+            let (r, g, b) = M3taTokens.rgb(a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light)
+            return NSColor(srgbRed: r, green: g, blue: b, alpha: 1)
+        })
+    }
+    static let kenteGold = Color(hex: KenteTokens.gold)                                   // fill/icon only
+    static let kenteGoldText = adaptive(dark: KenteTokens.gold, light: KenteTokens.goldDeep) // text-safe gold
+    static let statusGood = adaptive(dark: StatusTokens.good(dark: true), light: StatusTokens.good(dark: false))
+    static let statusWarn = adaptive(dark: StatusTokens.warn(dark: true), light: StatusTokens.warn(dark: false))
+    static let statusBad = adaptive(dark: StatusTokens.bad(dark: true), light: StatusTokens.bad(dark: false))
     static let tmwBg = tmw(\.bg), tmwSurface = tmw(\.surface), tmwLink = tmw(\.link), tmwGlow = tmw(\.accent2)
 }
 
@@ -29,7 +40,7 @@ struct StatusCard: View {
     let title: String, value: String, detail: String, icon: String
     var tone: Tone = .neutral
     enum Tone { case good, warn, bad, neutral }
-    var toneColor: Color { switch tone { case .good: .green; case .warn: .orange; case .bad: .red; case .neutral: .secondary } }
+    var toneColor: Color { switch tone { case .good: .statusGood; case .warn: .statusWarn; case .bad: .statusBad; case .neutral: .secondary } }
     var body: some View {
         VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
             HStack {
@@ -44,6 +55,7 @@ struct StatusCard: View {
         .padding(M3taTokens.Spacing.l)
         .frame(maxWidth: .infinity, minHeight: 150, maxHeight: 150, alignment: .topLeading)
         .glassEffect(.regular, in: .rect(cornerRadius: M3taTokens.Radius.tile))
+        .overlay(alignment: .leading) { UnevenRoundedRectangle(topLeadingRadius: M3taTokens.Radius.tile, bottomLeadingRadius: M3taTokens.Radius.tile).fill(Color.kenteGold).frame(width: 3).accessibilityHidden(true) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value). \(detail)")
     }
@@ -53,7 +65,7 @@ struct BrandHeader: View {
     var body: some View {
         HStack(spacing: M3taTokens.Spacing.s) {
             RoundedRectangle(cornerRadius: 6).fill(Color.m3taNavy).frame(width: 26, height: 26)
-                .overlay(Image(systemName: "cube.transparent").font(.caption.bold()).foregroundStyle(Color(hex: TMWTokens.cosmicRed)))
+                .overlay(Image(systemName: "cube.transparent").font(.caption.bold()).foregroundStyle(Color.kenteGold))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
                 Text("M3ta-OS").font(.headline)
@@ -99,5 +111,13 @@ struct OverviewView: View {
             }.padding(M3taTokens.Spacing.xl)
         }
         .task { async let c = CopilotHealth.check(); async let b = BrainClient.status(); async let m = ModelRoute.fetch(); copilot = await c; brain = await b; models = await m }
+    }
+}
+
+/// Kente stripe divider (fills only, 4pt; part of the ≤15% accent budget).
+struct KenteStripe: View {
+    var body: some View {
+        HStack(spacing: 0) { ForEach(Array(KenteTokens.stripe.enumerated()), id: \.offset) { Color(hex: $0.element) } }
+            .frame(height: 4).accessibilityHidden(true)
     }
 }

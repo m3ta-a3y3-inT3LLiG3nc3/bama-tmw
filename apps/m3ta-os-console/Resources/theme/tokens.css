@@ -46,3 +46,24 @@
   --success:#5CC08E;
   --alert:#FF9F6B;
 }
+
+/* Kente Heritage v2.1 — ADOPTED 2026-10-27 */
+:root{
+  --tmw-kente-gold: #F2C230;
+  --tmw-kente-gold-deep: #7A5600;
+  --tmw-kente-green: #3FBF3A;
+  --tmw-kente-green-deep: #17702A;
+  --tmw-kente-red: #F23A2E;
+  --tmw-kente-indigo: #3E6E8E;
+  --tmw-glow-neon-green: #5CFF4A;
+  --tmw-glow-gold: #FFD447;
+  --tmw-heritage-pattern: url("kente-tile-v2.svg");
+  --tmw-heritage-max-general: 15%;
+  --tmw-heritage-max-speaker: 40%;
+  --tmw-shadow-glow-green: 0 0 24px 6px rgb(92 255 74 / .55);
+  --tmw-shadow-glow-gold: 0 0 24px 6px rgb(255 212 71 / .5);
+}
+.tmw-kente-letters{font-family:Inter,sans-serif;font-weight:900;background:var(--tmw-heritage-pattern) repeat;background-size:120px;-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px var(--tmw-glow-neon-green));}
+.tmw-heritage-band{height:48px;background:var(--tmw-heritage-pattern) repeat-x;background-size:auto 100%;border-top:4px solid var(--tmw-kente-gold);}
+.tmw-heritage-badge{background:var(--tmw-kente-gold-deep);color:#FBF6EE;}
+.tmw-kente-letters--small{font-weight:900;color:var(--tmw-kente-gold);text-shadow:0 0 14px var(--tmw-glow-gold);} /* display <120px */

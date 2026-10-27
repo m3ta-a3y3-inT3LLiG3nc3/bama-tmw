@@ -24,3 +24,29 @@ import Testing
         #expect(M3taTokens.contrast(TMWTokens.cosmicRed, TMWTokens.violetGlow) < 4.5)
     }
 }
+
+@Suite struct KenteThemeTests {
+    static let lightBgs = [TMWTokens.light.bg, TMWTokens.light.surface, TMWTokens.lightbody, TMWTokens.pearl, 0xFFFFFF]
+    @Test func goldTextNeverOnLight() {
+        #expect(KenteTokens.goldText(onDark: false) != KenteTokens.gold)
+        for (n, fg, bg) in KenteTokens.textPairs where Self.lightBgs.contains(bg) {
+            #expect(fg != KenteTokens.gold && fg != KenteTokens.glowGold, "\(n)")
+        }
+    }
+    @Test func statusNeverKenteGreen() {
+        for c in StatusTokens.all { #expect(![KenteTokens.green, KenteTokens.greenDeep, KenteTokens.glowNeonGreen].contains(c)) }
+    }
+    @Test func kenteTextPairsPassAA() {
+        for (n, a, b) in KenteTokens.textPairs { #expect(M3taTokens.contrast(a, b) >= 4.5, "\(n)") }
+    }
+    @Test func statusColorsReadable() {
+        for d in [true, false] {
+            let bg = d ? TMWTokens.dark.bg : TMWTokens.light.bg
+            for c in [StatusTokens.good(dark: d), StatusTokens.warn(dark: d), StatusTokens.bad(dark: d)] { #expect(M3taTokens.contrast(c, bg) >= 4.5) }
+        }
+    }
+    @Test func accentBudgetUnder15Percent() { #expect(KenteTokens.accentShare() <= 0.15) }
+    @Test func tokensMatchPack() {
+        #expect(KenteTokens.all == [0xF2C230, 0x7A5600, 0x3FBF3A, 0x17702A, 0xF23A2E, 0x3E6E8E, 0x5CFF4A, 0xFFD447])
+    }
+}

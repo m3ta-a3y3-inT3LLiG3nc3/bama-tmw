@@ -70,7 +70,7 @@ struct RootView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 // Banner reserves its own space so scrolling content never sits under it.
-                .safeAreaInset(edge: .top, spacing: 0) { if sel != .overview { AgeBanner(state: st) } }
+                .safeAreaInset(edge: .top, spacing: 0) { VStack(spacing: 0) { KenteStripe(); if sel != .overview { AgeBanner(state: st) } } }
             } else if store.state == nil && store.error == nil { ProgressView("Loading snapshot…")
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }

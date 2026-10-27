@@ -1,0 +1,48 @@
+/* TMW Cosmic Lightbody v1 — BAMA raw tokens */
+:root{
+  --tmw-onyx:#0E0A12;
+  --tmw-onyx-raised:#1B1422;
+  --tmw-line:#3A2C48;
+  --tmw-cosmic-red:#F0505A;
+  --tmw-cosmic-red-deep:#A01628;
+  --tmw-violet-glow:#B48CF2;
+  --tmw-violet-deep:#5B2C9E;
+  --tmw-lightbody:#FBF6EE;
+  --tmw-pearl:#EDE4F5;
+  --tmw-muted:#BDB2C8;
+  --tmw-success:#5CC08E;
+  --tmw-alert:#FF9F6B;
+  --tmw-ink-on-light:#0E0A12;
+  --tmw-white:#FFFFFF;
+  --tmw-nebula:radial-gradient(60% 60% at 70% 30%,#A01628 0%,#5B2C9E 55%,#0E0A12 100%);
+}
+:root,[data-theme=light]{
+  --bg:#FBF6EE;
+  --surface:#FFFFFF;
+  --line:#E2D8E6;
+  --text:#0E0A12;
+  --text-muted:#5A5064;
+  --accent:#A01628;
+  --accent-fill:#A01628;
+  --on-accent:#FBF6EE;
+  --accent-2:#5B2C9E;
+  --link:#5B2C9E;
+  --glow:#EDE4F5;
+  --success:#1F6B45;
+  --alert:#A3261C;
+}
+.dark,[data-theme=dark]{
+  --bg:#0E0A12;
+  --surface:#1B1422;
+  --line:#3A2C48;
+  --text:#FBF6EE;
+  --text-muted:#BDB2C8;
+  --accent:#F0505A;
+  --accent-fill:#F0505A;
+  --on-accent:#0E0A12;
+  --accent-2:#B48CF2;
+  --link:#B48CF2;
+  --glow:#B48CF2;
+  --success:#5CC08E;
+  --alert:#FF9F6B;
+}

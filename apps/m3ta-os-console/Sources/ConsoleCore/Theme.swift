@@ -40,3 +40,37 @@ public enum TMWTokens {
     public static let dark = Palette(bg: 0x0E0A12, surface: 0x1B1422, line: 0x3A2C48, text: 0xFBF6EE, textMuted: 0xBDB2C8,
         accent: 0xF0505A, accentFill: 0xF0505A, onAccent: 0x0E0A12, accent2: 0xB48CF2, link: 0xB48CF2, glow: 0xB48CF2, success: 0x5CC08E, alert: 0xFF9F6B)
 }
+
+/// Kente Heritage v2.1 (adopted 2026-10-27; Resources/theme/tokens.css + kente-tile-v2.svg).
+/// Accent only, ≤15% of surfaces (brand tile, kente stripe divider, card accent edges).
+/// Never used for status. Gold is never text on a light background (gold-deep there, or icon/fill only).
+public enum KenteTokens {
+    public static let gold = 0xF2C230, goldDeep = 0x7A5600, green = 0x3FBF3A, greenDeep = 0x17702A,
+                      red = 0xF23A2E, indigo = 0x3E6E8E, glowNeonGreen = 0x5CFF4A, glowGold = 0xFFD447
+    public static let all = [gold, goldDeep, green, greenDeep, red, indigo, glowNeonGreen, glowGold]
+    /// Stripe order for the divider (fills only).
+    public static let stripe = [gold, green, red, indigo]
+    /// The only kente color allowed as text for a given background.
+    public static func goldText(onDark: Bool) -> Int { onDark ? gold : goldDeep }
+    /// Text pairs the Console actually renders with kente colors: (name, fg, bg).
+    public static let textPairs: [(String, Int, Int)] = [
+        ("goldText(dark)/onyx", goldText(onDark: true), TMWTokens.dark.bg),
+        ("goldText(dark)/surface", goldText(onDark: true), TMWTokens.dark.surface),
+        ("goldText(light)/lightbody", goldText(onDark: false), TMWTokens.light.bg),
+        ("goldText(light)/white", goldText(onDark: false), TMWTokens.light.surface),
+        ("lightbody/goldDeep badge", TMWTokens.lightbody, goldDeep),
+    ]
+    /// Approx share of surface the accents occupy in a 960×640 window (stripe 4pt + tile + card edges).
+    public static func accentShare(width: Double = 960, height: Double = 640, cards: Int = 10) -> Double {
+        let stripe = width * 4, tile = 26.0 * 26, edges = Double(cards) * 3 * 150
+        return (stripe + tile + edges) / (width * height)
+    }
+}
+
+/// Status colors (good / warn / bad / info) — from TMW semantic tokens, never kente.
+public enum StatusTokens {
+    public static func good(dark: Bool) -> Int { dark ? TMWTokens.dark.success : TMWTokens.light.success }
+    public static func warn(dark: Bool) -> Int { dark ? TMWTokens.dark.alert : TMWTokens.light.alert }
+    public static func bad(dark: Bool) -> Int { dark ? TMWTokens.cosmicRed : TMWTokens.cosmicRedDeep }
+    public static var all: [Int] { [true, false].flatMap { [good(dark: $0), warn(dark: $0), bad(dark: $0)] } }
+}
