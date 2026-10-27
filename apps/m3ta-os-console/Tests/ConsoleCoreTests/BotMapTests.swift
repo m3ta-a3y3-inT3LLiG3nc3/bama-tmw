@@ -51,7 +51,7 @@ import Foundation
     }
     @Test func loopbackOnly() {
         #expect(BrainClient.mcpURL.host == "127.0.0.1")
-        #expect(CopilotHealth.url.host == "127.0.0.1")
+        #expect(JarvisEndpoint().runtime("/health").host == "127.0.0.1")
         #expect(String(data: BrainClient.body(tool: "rea_brains_search", args: ["q": "x"]), encoding: .utf8)!.contains("rea_brains_search"))
     }
 }

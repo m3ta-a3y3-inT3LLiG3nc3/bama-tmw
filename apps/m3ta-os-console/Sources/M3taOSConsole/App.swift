@@ -66,7 +66,7 @@ struct RootView: View {
                     case .mesh: MeshView(s: st)
                     case .bots: BotsView()
                     case .brain: BrainView()
-                    case .copilot: CopilotStub()
+                    case .copilot: JarvisLiveView()
                     }
                 }
             } else if store.state == nil && store.error == nil { ProgressView("Loading snapshot…")
@@ -218,15 +218,24 @@ struct SettingsView: View {
     @AppStorage("meshStatePath") private var path = ""
     @AppStorage("botMapPath") private var botPath = ""
     @AppStorage("appearance") private var appearance = Appearance.system.rawValue
+    @AppStorage("jarvisRuntimePort") private var runtimePort = 9782
+    @AppStorage("jarvisReaPort") private var reaPort = 9783
+    @AppStorage("jarvisRefreshSeconds") private var refreshSeconds = 10
     var body: some View {
         Form {
+            Section("JARVIS endpoint (host is always 127.0.0.1)") {
+                TextField("agent-runtime port", value: $runtimePort, format: .number.grouping(.never))
+                TextField("rea-mcp port", value: $reaPort, format: .number.grouping(.never))
+                Stepper("Auto-refresh every \(refreshSeconds)s", value: $refreshSeconds, in: 5...120, step: 5)
+                Button("Reset to 9782 / 9783") { runtimePort = 9782; reaPort = 9783 }
+            }
             TextField("MeshState JSON path (empty = bundled fixture)", text: $path)
             Text("Loaded from: \(store.sourcePath ?? "none")").font(.caption)
             Picker("Appearance", selection: $appearance) { ForEach(Appearance.allCases) { Text($0.rawValue).tag($0.rawValue) } }
             TextField("Bot map JSON path (empty = bundled copy)", text: $botPath)
             Text("Bot map from: \(bots.sourcePath)").font(.caption)
             Button("Reload") { store.refresh(); bots.refresh() }
-            Text("No secrets are stored. Copilot health target: 127.0.0.1:9782 (read-only GET).").font(.caption).foregroundStyle(.secondary)
+            Text("No secrets are stored. JARVIS checks are read-only GETs on loopback; the console never starts JARVIS.").font(.caption).foregroundStyle(.secondary)
         }.padding().frame(width: 460)
     }
 }
