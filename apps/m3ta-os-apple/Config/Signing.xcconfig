@@ -1,0 +1,7 @@
+// Automatic signing. Leave BAMA_TEAM empty for unsigned simulator builds.
+// After Kingdom signs in to Xcode: copy Signing.local.xcconfig.example → Signing.local.xcconfig and set BAMA_TEAM (gitignored).
+BAMA_TEAM = J299Y77V8C
+BAMA_BUNDLE_PREFIX = com.th3m3taway.bama
+#include? "Signing.local.xcconfig"
+DEVELOPMENT_TEAM = $(BAMA_TEAM)
+CODE_SIGN_STYLE = Automatic
