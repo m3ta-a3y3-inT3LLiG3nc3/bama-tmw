@@ -1,0 +1,11 @@
+.build/
+.swiftpm/
+DerivedData/
+*.xcodeproj/
+xcuserdata/
+.DS_Store
+.env*
+/shots/
+
+# Reference screenshots hold real task titles (spec, Gotchas) — never commit them.
+docs/screens/*.png
