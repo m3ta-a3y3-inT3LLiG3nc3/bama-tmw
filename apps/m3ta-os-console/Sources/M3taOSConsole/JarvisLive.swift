@@ -18,7 +18,7 @@ struct JarvisLiveView: View {
                 VStack(spacing: 16) {
                     ContentUnavailableView("JARVIS offline", systemImage: "bolt.horizontal.circle",
                         description: Text("Nothing answered on 127.0.0.1:\(String(endpoint.runtimePort)) or :\(String(endpoint.reaPort)).\n\(reason(s.runtime))\nThe rest of the console still works. This panel never starts JARVIS."))
-                    Button("Retry") { Task { await refresh() } }.keyboardShortcut("r").disabled(checking)
+                    Button("Retry") { Task { await refresh() } }.disabled(checking)
                     Text("Last checked \(s.checkedAt.formatted(date: .omitted, time: .standard)) · auto-retry every \(refreshSeconds)s").font(.caption).foregroundStyle(.secondary)
                 }.padding()
             } else if let s = status {
@@ -29,7 +29,7 @@ struct JarvisLiveView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle("JARVIS live")
-        .toolbar { Button { Task { await refresh() } } label: { Label("Refresh", systemImage: "arrow.clockwise") }.disabled(checking) }
+        .onReceive(NotificationCenter.default.publisher(for: .consoleRefresh)) { _ in Task { await refresh() } }
         .task(id: "\(runtimePort)-\(reaPort)-\(refreshSeconds)") {
             while !Task.isCancelled {
                 await refresh()

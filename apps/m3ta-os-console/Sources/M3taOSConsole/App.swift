@@ -56,8 +56,7 @@ struct RootView: View {
             .navigationSplitViewColumnWidth(min: 190, ideal: 220)
         } detail: {
             if let st = store.state {
-                VStack(alignment: .leading, spacing: 0) {
-                    if sel != .overview { AgeBanner(state: st) }
+                Group {
                     switch sel ?? .overview {
                     case .overview: OverviewView()
                     case .status: StatusView(s: st)
@@ -69,10 +68,13 @@ struct RootView: View {
                     case .copilot: JarvisLiveView()
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                // Banner reserves its own space so scrolling content never sits under it.
+                .safeAreaInset(edge: .top, spacing: 0) { if sel != .overview { AgeBanner(state: st) } }
             } else if store.state == nil && store.error == nil { ProgressView("Loading snapshot…")
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
-        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh() } }
+        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
     }
 }
 
@@ -239,3 +241,5 @@ struct SettingsView: View {
         }.padding().frame(width: 460)
     }
 }
+
+extension Notification.Name { static let consoleRefresh = Notification.Name("os.m3ta.console.refresh") }
