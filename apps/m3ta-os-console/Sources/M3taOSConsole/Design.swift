@@ -58,6 +58,7 @@ struct OverviewView: View {
     @Environment(BotStore.self) var bots
     @State private var copilot: CopilotHealth.Result?
     @State private var brain: BrainClient.StatusOutcome?
+    @State private var models: ModelRoute.Outcome?
     let cols = [GridItem(.adaptive(minimum: 210), spacing: M3taTokens.Spacing.l)]
     var body: some View {
         ScrollView {
@@ -82,9 +83,10 @@ struct OverviewView: View {
                     }
                     StatusCard(title: "Brain (rea-mcp)", value: { switch brain { case .none: "Checking…"; case .online: "Reachable"; case .offline: "Offline" } }(), detail: "127.0.0.1:9783, read-only", icon: "brain.head.profile", tone: { switch brain { case .none: .neutral; case .online: .good; case .offline: .bad } }())
                     StatusCard(title: "Copilot (JARVIS)", value: { switch copilot { case .none: "Checking…"; case .online: "Reachable"; case .offline: "Offline" } }(), detail: "127.0.0.1:9782, never started from here", icon: "sparkles", tone: { switch copilot { case .none: .neutral; case .online: .good; case .offline: .bad } }())
+                    StatusCard(title: "Models (JARVIS)", value: { switch models { case .none: "Checking…"; case .ok(let r): r.default.model; case .offline: "Offline" } }(), detail: { switch models { case .ok(let r): "Fallback \(r.fallback ?? "?") · paid on: \(r.paidEnabledCount) · JEV cap $\(Int(r.jev?.daily_usd_cap ?? 0))"; case .offline(let e): e; case .none: "127.0.0.1:9782/api/models, read-only" } }(), icon: "cpu", tone: { switch models { case .ok(let r): r.default.paid ? .warn : .good; case .offline: .bad; case .none: .neutral } }())
                 }
             }.padding(M3taTokens.Spacing.xl)
         }
-        .task { async let c = CopilotHealth.check(); async let b = BrainClient.status(); copilot = await c; brain = await b }
+        .task { async let c = CopilotHealth.check(); async let b = BrainClient.status(); async let m = ModelRoute.fetch(); copilot = await c; brain = await b; models = await m }
     }
 }
