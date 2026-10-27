@@ -51,11 +51,18 @@ MVP status map.
 ## Look
 Native, system accent color, one design system per the BAMA design skills.
 
+## Copilot (in version one, approved 2026-10-27)
+- CopilotKit chat panel that talks to JARVIS's existing runtime only:
+  http://127.0.0.1:9782/api/copilotkit and AG-UI at /agui. No second runtime.
+- Local models first (Ollama on 127.0.0.1:11434), $0; no cloud keys in the app.
+- Copilot actions that send, spend, or delete go through the JEV approval gate.
+- If JARVIS is down, show an offline card; the rest of the console still works.
+
 ## Not in version one
 - Live polling of Pluto (no API exists; state is manual-refresh)
 - Notion connection or page curation inside the app (stays in Pluto/Notion)
 - Vault browsing or Pluto vault reach (later milestone, after pairing test)
-- CopilotKit or Ko3mand surfaces
+- Ko3mand surfaces
 - Storing or displaying any credential
 ```
 
@@ -165,6 +172,14 @@ Acceptance:
 - [manual] Firing the configured Trigger records a Woke entry; a failed
   POST shows the error and keeps the envelope unsent.
 Status: todo
+
+## M1b Copilot
+
+### S-007 Copilot panel through JARVIS runtime
+As M3ta, I want a Copilot panel that answers about mesh state through JARVIS's
+CopilotKit runtime on 127.0.0.1:9782, using local models first.
+Acceptance: panel connects to /api/copilotkit (AG-UI /agui); offline card with
+retry when 9782 is down; no keys stored; consequential actions held by JEV.
 
 ## M3 Dropped for v1
 - Live Pluto polling or sync (no API exists)
