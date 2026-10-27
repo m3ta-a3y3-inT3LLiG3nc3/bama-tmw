@@ -46,6 +46,16 @@ Start with the window snapper. It's the smallest, and it teaches the two
 things most of these apps need: a global shortcut and the Accessibility
 permission.
 
+## M3ta's specs
+
+Specs written for M3ta's own builds in this fork, same five-part format.
+
+| Spec | What it does | Replaces |
+| --- | --- | --- |
+| [m3ta-os-console.md](m3ta-os-console.md) | Mesh and Pluto status, Ruth Local pairing walk-through, approval-gated task dispatch to Pluto | hirepluto.ai Manage pages, the written MVP status map |
+
+Its seed state fixture is [fixtures/mesh-state-2026-10-26.json](fixtures/mesh-state-2026-10-26.json): the 2026-10-22 MVP status map plus the 2026-10-26 Pluto inventory, as one JSON snapshot.
+
 ## What a spec holds
 
 Every spec has the same parts, in this order:
