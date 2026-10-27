@@ -1,0 +1,81 @@
+# Agent harnesses exposed as skills behind the m3ta-os-mvp skills server (:9783, owned by K0Ad33).
+# Default model plane: local Ollama, OpenAI-compatible. Key fields are Keychain item NAMES only.
+[defaults]
+skills_server = "http://127.0.0.1:9783"
+helper = "http://127.0.0.1:9782"
+openai_base_url = "http://127.0.0.1:11434/v1"
+coder_model = "qwen2.5-coder:7b"      # pull before use
+reasoning_model = "deepseek-r1:14b"   # pull before use; fits 48 GB
+approval_tap_required = true
+
+[harness.jev]           # m3ta-a3y3-inT3LLiG3nc3/jev-ultrafast (fork of browser-use/jev-ultrafast)
+invoke = "uv run jev-ultrafast"   # unverified entry point name
+env = { JEV_BACKEND = "openai", ACTION_MODEL = "m3ta/qwen3-abl-8b-nothink-32k" }
+paid_key_required = false
+
+[harness.pi]            # pi coding agent (badlogic/pi-mono, npm @earendil-works/pi-coding-agent) — verified pi.dev / docs.ollama.com
+invoke = "pi"  # or: ollama launch pi
+config = "~/.pi/agent/models.json provider ollama, api=openai-completions"
+paid_key_required = false
+
+[harness.deepseek_harness]   # fork of deepseek-ai/deepseek-harness
+invoke = "unverified"
+local_ollama = "unverified"
+paid_key_required = "unverified (DeepSeek API likely)"
+key_keychain_item = "m3ta-os.deepseek.api-key"
+
+[harness.deepseek_reasonix]  # fork of esengine/DeepSeek-Reasonix; DeepSeek-native, prefix-cache oriented
+invoke = "unverified"
+local_ollama = "unverified"
+paid_key_required = "likely (DeepSeek API)"
+key_keychain_item = "m3ta-os.deepseek.api-key"
+
+[harness.gemini_cli]    # fork of google-gemini/gemini-cli
+invoke = "gemini"
+local_ollama = false    # Gemini API only (free tier via Google login exists; quotas apply)
+paid_key_required = "free tier / optional key"
+key_keychain_item = "m3ta-os.gemini.api-key"
+
+[harness.google_adk]    # Google Agent Development Kit — no fork found in GitHub
+invoke = "adk run <agent>"
+local_ollama = "via LiteLLM model 'ollama_chat/<model>' (unverified)"
+paid_key_required = false
+
+[harness.aider]         # fork of Aider-AI/aider
+invoke = "aider --model ollama_chat/qwen2.5-coder:7b"
+env = { OLLAMA_API_BASE = "http://127.0.0.1:11434" }
+paid_key_required = false
+
+[harness.browser_use]   # fork of browser-use/browser-use
+invoke = "python agent (ChatOllama / OpenAI-compatible)"
+paid_key_required = false
+
+[harness.openclaw]      # fork of openclaw/openclaw (24/7 host)
+invoke = "openclaw"     # unverified
+local_ollama = "unverified (OpenAI-compatible provider expected)"
+paid_key_required = "depends on provider"
+
+[harness.hermes_agent]  # fork of NousResearch/hermes-agent
+invoke = "hermes"       # unverified
+local_ollama = "unverified (custom OpenAI-compatible endpoint expected)"
+paid_key_required = "depends on provider"
+
+[harness.copilot_cli]   # fork of github/copilot-cli
+invoke = "copilot"
+local_ollama = false
+paid_key_required = "GitHub Copilot subscription"
+
+[harness.claude_code]   # Anthropic; plugins in claude-plugins-official fork
+invoke = "claude"
+local_ollama = false    # Anthropic API/subscription (proxies exist; unsupported here)
+paid_key_required = true
+
+[harness.codex]         # OpenAI Codex CLI; skills in skills-codex-tmw
+invoke = "codex --oss"  # --oss targets local Ollama (unverified flag on current version)
+paid_key_required = "false with --oss; otherwise OpenAI"
+
+[harness.orgo]          # Orgo cloud desktops for isolated GUI work
+invoke = "Orgo API"
+local_ollama = false
+paid_key_required = true
+key_keychain_item = "m3ta-os.orgo.api-key"
