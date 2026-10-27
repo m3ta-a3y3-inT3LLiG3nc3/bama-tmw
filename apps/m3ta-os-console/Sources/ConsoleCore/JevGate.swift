@@ -16,7 +16,13 @@ public enum JevVerdict: Sendable, Equatable {
 }
 
 public enum JevGate {
-    public static var rulesDir: URL { FileManager.default.homeDirectoryForCurrentUser.appending(path: ".config/m3ta/jev/rules") }
+    public static var rulesDir: URL {
+        #if os(macOS)
+        FileManager.default.homeDirectoryForCurrentUser.appending(path: ".config/m3ta/jev/rules")
+        #else
+        URL.applicationSupportDirectory.appending(path: "jev/rules") // devices never read the Mac's rules; empty → paid actions blocked
+        #endif
+    }
     public static func loadRules(from dir: URL = rulesDir) -> [JevRule] {
         let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? []
         return files.filter { $0.pathExtension == "json" }.compactMap { u in
