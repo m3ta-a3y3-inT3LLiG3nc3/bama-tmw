@@ -85,8 +85,10 @@ public struct EmbeddedApp: Identifiable, Sendable, Hashable {
     public let id: String, name: String, icon: String, appName: String, defaultPort: Int
     public static let all: [EmbeddedApp] = [
         .init(id: "openbot", name: "OpenBot", icon: "message.badge.waveform", appName: "OpenBot", defaultPort: 28417),
-        .init(id: "opendots", name: "OpenDots", icon: "circle.grid.3x3", appName: "OpenDots", defaultPort: 3333),
-        .init(id: "openmuse", name: "OpenMuse", icon: "music.note.list", appName: "OpenMuse", defaultPort: 5173),
+        .init(id: "opendots", name: "OpenDots", icon: "circle.grid.3x3", appName: "OpenDots", defaultPort: 4310),
+        .init(id: "openmuse", name: "OpenMuse", icon: "music.note.list", appName: "OpenMuse", defaultPort: 8797),
+        .init(id: "openduet", name: "OpenDuet", icon: "person.2.wave.2", appName: "openbot-desktop", defaultPort: 53363),
+        .init(id: "aimock", name: "aimock", icon: "testtube.2", appName: "aimock", defaultPort: 4010),
     ]
     public func url(port: Int) -> URL { URL(string: "http://127.0.0.1:\(port)/")! }
     public static func isLoopback(_ u: URL) -> Bool { ["127.0.0.1", "localhost", "::1"].contains(u.host() ?? "") }

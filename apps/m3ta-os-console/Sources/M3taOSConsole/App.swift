@@ -22,11 +22,11 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", openduet = "OpenDuet", aimock = "aimock", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse, .openduet, .aimock])]
+    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse, .openduet, .aimock: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .openduet: "person.2.wave.2"; case .aimock: "testtube.2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
@@ -65,6 +65,8 @@ struct RootView: View {
                     case .openbot: EmbedView(app: EmbeddedApp.all[0]).id("openbot")
                     case .opendots: EmbedView(app: EmbeddedApp.all[1]).id("opendots")
                     case .openmuse: EmbedView(app: EmbeddedApp.all[2]).id("openmuse")
+                    case .openduet: EmbedView(app: EmbeddedApp.all[3]).id("openduet")
+                    case .aimock: EmbedView(app: EmbeddedApp.all[4]).id("aimock")
                     case .status: StatusView(s: st)
                     case .pairing: PairingView(s: st)
                     case .result: ResultView(s: st)
