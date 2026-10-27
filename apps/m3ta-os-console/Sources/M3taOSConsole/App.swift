@@ -22,11 +22,11 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", openduet = "OpenDuet", aimock = "aimock", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot", hud = "HUD", reaApprovals = "rea Approvals", health = "Health", skills = "Skills", orbit = "Orbit", chat = "Chat"
+    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", openduet = "OpenDuet", aimock = "aimock", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot", hud = "HUD", reaApprovals = "rea Approvals", health = "Health", skills = "Skills", orbit = "Orbit", chat = "Chat", cStudio = "Studio overview", cEdit = "Edit", cThumbs = "Thumbnails", cVoice = "Voice & Audio", cCaptions = "Captions", cExport = "Export", cPublish = "Publish queue", appMesh = "App Mesh"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("JARVIS", [.hud, .chat, .reaApprovals, .health, .skills, .orbit]), ("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse, .openduet, .aimock])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse, .openduet, .aimock: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007"; case .hud, .chat, .reaApprovals, .health, .skills, .orbit: "M7-JARVIS" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .openduet: "person.2.wave.2"; case .aimock: "testtube.2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles"; case .hud: "circle.hexagongrid"; case .chat: "bubble.left.and.text.bubble.right"; case .reaApprovals: "checkmark.shield.fill"; case .health: "waveform.path.ecg"; case .skills: "books.vertical"; case .orbit: "globe.americas" } }
+    static let groups: [(String, [Screen])] = [("App Mesh", [.appMesh]), ("Creator", [.cStudio, .cEdit, .cThumbs, .cVoice, .cCaptions, .cExport, .cPublish]), ("JARVIS", [.hud, .chat, .reaApprovals, .health, .skills, .orbit]), ("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse, .openduet, .aimock])]
+    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse, .openduet, .aimock: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007"; case .hud, .chat, .reaApprovals, .health, .skills, .orbit: "M7-JARVIS"; case .cStudio, .cEdit, .cThumbs, .cVoice, .cCaptions, .cExport, .cPublish: "M8-CREATOR"; case .appMesh: "M9-MESH" } }
+    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .openduet: "person.2.wave.2"; case .aimock: "testtube.2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles"; case .hud: "circle.hexagongrid"; case .chat: "bubble.left.and.text.bubble.right"; case .reaApprovals: "checkmark.shield.fill"; case .health: "waveform.path.ecg"; case .skills: "books.vertical"; case .orbit: "globe.americas"; case .cStudio: "film.stack"; case .cEdit: "scissors"; case .cThumbs: "photo.on.rectangle"; case .cVoice: "waveform"; case .cCaptions: "captions.bubble"; case .cExport: "square.and.arrow.up.on.square"; case .cPublish: "paperplane"; case .appMesh: "point.3.filled.connected.trianglepath.dotted" } }
 }
 
 @main
@@ -35,10 +35,11 @@ struct M3taOSConsoleApp: App {
     @State private var bots = BotStore()
     @State private var gate = ApprovalGate(auth: TouchIDAuth())
     @State private var jarvis = JarvisHub()
+    @State private var creator = CreatorHub()
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console", id: "console") { RootView().environment(jarvis).task { await jarvis.refresh() }.environment(store).environment(bots).environment(gate).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console", id: "console") { RootView().environment(jarvis).environment(creator).task { await jarvis.refresh() }.environment(store).environment(bots).environment(gate).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         MenuBarExtra("M3ta-OS", systemImage: "cube.transparent") { MenuBarPanel().environment(gate) }.menuBarExtraStyle(.window)
         Settings { SettingsView().environment(store).environment(bots) }
     }
@@ -81,6 +82,14 @@ struct RootView: View {
                     case .health: StackHealthView()
                     case .skills: SkillsSearchView()
                     case .orbit: OrbitPanelView()
+                    case .cStudio: CreatorStudioView()
+                    case .cEdit: CreatorEditView()
+                    case .cThumbs: CreatorThumbsView()
+                    case .cVoice: CreatorVoiceView()
+                    case .cCaptions: CreatorCaptionsView()
+                    case .cExport: CreatorExportView()
+                    case .cPublish: CreatorPublishView()
+                    case .appMesh: AppMeshView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
