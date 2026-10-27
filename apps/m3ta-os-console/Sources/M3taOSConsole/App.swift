@@ -22,21 +22,22 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case home = "Home", approvals = "Approvals", health = "Health", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Home", [.home, .approvals, .health, .overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
+    var story: String { switch self { case .home: "M3-HOME"; case .approvals: "M3-INBOX"; case .health: "M3-HEALTH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .home: "house"; case .approvals: "touchid"; case .health: "stethoscope"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
+    @State private var m3 = M3Store()
     @AppStorage("appearance") private var appearance = Appearance.system.rawValue
-    init() { NSApplication.shared.setActivationPolicy(.regular) }
+    init() { NSApplication.shared.setActivationPolicy(.regular); WindowSnapshot.scheduleIfRequested() }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).environment(m3).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         Settings { SettingsView().environment(store).environment(bots) }
     }
 }
@@ -44,7 +45,7 @@ struct M3taOSConsoleApp: App {
 struct RootView: View {
     @Environment(Store.self) var store
     @Environment(BotStore.self) var bots
-    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .overview
+    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .home
     var body: some View {
         NavigationSplitView {
             List(selection: $sel) {
@@ -57,8 +58,11 @@ struct RootView: View {
         } detail: {
             if let st = store.state {
                 VStack(alignment: .leading, spacing: 0) {
-                    if sel != .overview { AgeBanner(state: st) }
-                    switch sel ?? .overview {
+                    if ![.overview, .home, .approvals, .health].contains(sel ?? .home) { AgeBanner(state: st) }
+                    switch sel ?? .home {
+                    case .home: HomeView()
+                    case .approvals: ApprovalsView()
+                    case .health: HealthView()
                     case .overview: OverviewView()
                     case .status: StatusView(s: st)
                     case .pairing: PairingView(s: st)
