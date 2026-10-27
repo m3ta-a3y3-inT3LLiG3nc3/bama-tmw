@@ -33,7 +33,7 @@ enum Screen: String, CaseIterable, Identifiable {
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
-    @AppStorage("appearance") private var appearance = Appearance.system.rawValue
+    @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
         WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
@@ -74,6 +74,7 @@ struct RootView: View {
             } else if store.state == nil && store.error == nil { ProgressView("Loading snapshot…")
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
+        .background(Color.tmwBg)
         .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
     }
 }
@@ -219,7 +220,7 @@ struct SettingsView: View {
     @Environment(BotStore.self) var bots
     @AppStorage("meshStatePath") private var path = ""
     @AppStorage("botMapPath") private var botPath = ""
-    @AppStorage("appearance") private var appearance = Appearance.system.rawValue
+    @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     @AppStorage("jarvisRuntimePort") private var runtimePort = 9782
     @AppStorage("jarvisReaPort") private var reaPort = 9783
     @AppStorage("jarvisRefreshSeconds") private var refreshSeconds = 10

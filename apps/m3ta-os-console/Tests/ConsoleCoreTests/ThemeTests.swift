@@ -13,3 +13,14 @@ import Testing
         #expect(M3taTokens.contrast(M3taTokens.goldHex, M3taTokens.whiteHex) < 4.5)
     }
 }
+
+@Suite struct TMWThemeTests {
+    @Test func lightPairsPassAA() { for (n, a, b) in TMWTokens.light.textPairs { #expect(M3taTokens.contrast(a, b) >= 4.5, "light \(n)") } }
+    @Test func darkPairsPassAA() { for (n, a, b) in TMWTokens.dark.textPairs { #expect(M3taTokens.contrast(a, b) >= 4.5, "dark \(n)") } }
+    @Test func fillOnlyTokensFailAsTextOnOnyx() {
+        // Documents the pack rule: these are fills, never text on onyx.
+        #expect(M3taTokens.contrast(TMWTokens.cosmicRedDeep, TMWTokens.onyx) < 4.5)
+        #expect(M3taTokens.contrast(TMWTokens.violetDeep, TMWTokens.onyx) < 4.5)
+        #expect(M3taTokens.contrast(TMWTokens.cosmicRed, TMWTokens.violetGlow) < 4.5)
+    }
+}

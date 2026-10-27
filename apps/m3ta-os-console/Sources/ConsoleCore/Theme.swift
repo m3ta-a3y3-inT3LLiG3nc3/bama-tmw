@@ -19,3 +19,24 @@ public enum M3taTokens {
         let (x, y) = (luminance(a), luminance(b)); return (max(x, y) + 0.05) / (min(x, y) + 0.05)
     }
 }
+
+/// TMW Cosmic Lightbody v1 (bama-theme pack, 2026-10-27; source Resources/theme/tokens.json).
+/// Semantic light ("Lightbody Day") and dark (onyx) palettes. Dark is the default.
+/// Rules: cosmic-red-deep / violet-deep are never text on onyx; never red on violet or violet on red.
+public enum TMWTokens {
+    public struct Palette: Sendable, Equatable {
+        public let bg, surface, line, text, textMuted, accent, accentFill, onAccent, accent2, link, glow, success, alert: Int
+        /// Text-bearing pairs that must meet WCAG AA (4.5:1).
+        public var textPairs: [(String, Int, Int)] {
+            [("text/bg", text, bg), ("text/surface", text, surface), ("muted/bg", textMuted, bg), ("muted/surface", textMuted, surface),
+             ("accent/bg", accent, bg), ("onAccent/accentFill", onAccent, accentFill), ("link/bg", link, bg), ("link/surface", link, surface),
+             ("success/bg", success, bg), ("alert/bg", alert, bg)]
+        }
+    }
+    public static let onyx = 0x0E0A12, onyxRaised = 0x1B1422, cosmicRed = 0xF0505A, cosmicRedDeep = 0xA01628,
+                      violetGlow = 0xB48CF2, violetDeep = 0x5B2C9E, lightbody = 0xFBF6EE, pearl = 0xEDE4F5
+    public static let light = Palette(bg: 0xFBF6EE, surface: 0xFFFFFF, line: 0xE2D8E6, text: 0x0E0A12, textMuted: 0x5A5064,
+        accent: 0xA01628, accentFill: 0xA01628, onAccent: 0xFBF6EE, accent2: 0x5B2C9E, link: 0x5B2C9E, glow: 0xEDE4F5, success: 0x1F6B45, alert: 0xA3261C)
+    public static let dark = Palette(bg: 0x0E0A12, surface: 0x1B1422, line: 0x3A2C48, text: 0xFBF6EE, textMuted: 0xBDB2C8,
+        accent: 0xF0505A, accentFill: 0xF0505A, onAccent: 0x0E0A12, accent2: 0xB48CF2, link: 0xB48CF2, glow: 0xB48CF2, success: 0x5CC08E, alert: 0xFF9F6B)
+}

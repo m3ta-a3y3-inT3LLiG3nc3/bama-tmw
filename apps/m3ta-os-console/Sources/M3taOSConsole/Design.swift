@@ -1,10 +1,21 @@
 import SwiftUI
+import AppKit
 import ConsoleCore
 
 extension Color {
     init(hex: Int) { let (r, g, b) = M3taTokens.rgb(hex); self.init(.sRGB, red: r, green: g, blue: b) }
-    static let m3taNavy = Color(hex: M3taTokens.navyHex)
-    static let m3taGold = Color(hex: M3taTokens.goldHex)
+    /// Adaptive TMW Cosmic Lightbody color (light = Lightbody Day, dark = onyx).
+    static func tmw(_ k: KeyPath<TMWTokens.Palette, Int>) -> Color {
+        Color(nsColor: NSColor(name: nil) { a in
+            let dark = a.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let (r, g, b) = M3taTokens.rgb((dark ? TMWTokens.dark : TMWTokens.light)[keyPath: k])
+            return NSColor(srgbRed: r, green: g, blue: b, alpha: 1)
+        })
+    }
+    // Legacy names kept so call sites stay stable; now mapped to TMW tokens.
+    static let m3taNavy = Color(hex: TMWTokens.onyx)       // brand mark fill
+    static let m3taGold = tmw(\.accent)                    // primary accent: cosmic red
+    static let tmwBg = tmw(\.bg), tmwSurface = tmw(\.surface), tmwLink = tmw(\.link), tmwGlow = tmw(\.accent2)
 }
 
 enum Appearance: String, CaseIterable, Identifiable {
@@ -42,7 +53,7 @@ struct BrandHeader: View {
     var body: some View {
         HStack(spacing: M3taTokens.Spacing.s) {
             RoundedRectangle(cornerRadius: 6).fill(Color.m3taNavy).frame(width: 26, height: 26)
-                .overlay(Image(systemName: "cube.transparent").font(.caption.bold()).foregroundStyle(Color.m3taGold))
+                .overlay(Image(systemName: "cube.transparent").font(.caption.bold()).foregroundStyle(Color(hex: TMWTokens.cosmicRed)))
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 0) {
                 Text("M3ta-OS").font(.headline)

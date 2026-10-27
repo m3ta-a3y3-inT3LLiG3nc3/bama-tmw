@@ -1,0 +1,56 @@
+/* TMW Cosmic Lightbody v1 -> shadcn/ui CSS variables (HSL channels). Paste into app/globals.css @layer base. */
+@layer base {
+:root {
+  --background: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --card: 0.0 0.0% 100.0%; /* #FFFFFF */
+  --card-foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --popover: 0.0 0.0% 100.0%; /* #FFFFFF */
+  --popover-foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --primary: 352.2 75.8% 35.7%; /* #A01628 */
+  --primary-foreground: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --secondary: 271.8 45.9% 92.7%; /* #EDE4F5 */
+  --secondary-foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --muted: 271.8 45.9% 92.7%; /* #EDE4F5 */
+  --muted-foreground: 270.0 11.1% 35.3%; /* #5A5064 */
+  --accent: 271.8 45.9% 92.7%; /* #EDE4F5 */
+  --accent-foreground: 264.7 56.4% 39.6%; /* #5B2C9E */
+  --destructive: 4.4 70.7% 37.5%; /* #A3261C */
+  --destructive-foreground: 0.0 0.0% 100.0%; /* #FFFFFF */
+  --border: 282.9 21.9% 87.5%; /* #E2D8E6 */
+  --input: 282.9 21.9% 87.5%; /* #E2D8E6 */
+  --ring: 264.7 56.4% 39.6%; /* #5B2C9E */
+  --chart-1: 352.2 75.8% 35.7%; /* #A01628 */
+  --chart-2: 264.7 56.4% 39.6%; /* #5B2C9E */
+  --chart-3: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --chart-4: 150.0 55.1% 27.1%; /* #1F6B45 */
+  --chart-5: 270.0 11.1% 35.3%; /* #5A5064 */
+  --radius: 0.75rem;
+}
+.dark {
+  --background: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --foreground: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --card: 270.0 25.9% 10.6%; /* #1B1422 */
+  --card-foreground: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --popover: 270.0 25.9% 10.6%; /* #1B1422 */
+  --popover-foreground: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --primary: 356.2 84.2% 62.7%; /* #F0505A */
+  --primary-foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --secondary: 264.7 56.4% 39.6%; /* #5B2C9E */
+  --secondary-foreground: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --muted: 270.0 25.9% 10.6%; /* #1B1422 */
+  --muted-foreground: 270.0 16.7% 74.1%; /* #BDB2C8 */
+  --accent: 270.0 24.1% 22.7%; /* #3A2C48 */
+  --accent-foreground: 263.5 79.7% 74.9%; /* #B48CF2 */
+  --destructive: 21.1 100.0% 71.0%; /* #FF9F6B */
+  --destructive-foreground: 270.0 28.6% 5.5%; /* #0E0A12 */
+  --border: 270.0 24.1% 22.7%; /* #3A2C48 */
+  --input: 270.0 24.1% 22.7%; /* #3A2C48 */
+  --ring: 263.5 79.7% 74.9%; /* #B48CF2 */
+  --chart-1: 356.2 84.2% 62.7%; /* #F0505A */
+  --chart-2: 263.5 79.7% 74.9%; /* #B48CF2 */
+  --chart-3: 36.9 61.9% 95.9%; /* #FBF6EE */
+  --chart-4: 150.0 44.2% 55.7%; /* #5CC08E */
+  --chart-5: 270.0 16.7% 74.1%; /* #BDB2C8 */
+}
+}
