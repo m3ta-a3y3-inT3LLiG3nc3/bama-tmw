@@ -1,2 +1,5 @@
 .DS_Store
 .build/
+
+apps/m3ta-os-apple/BAMA.xcodeproj/-Xcc/
+apps/m3ta-os-apple/build/

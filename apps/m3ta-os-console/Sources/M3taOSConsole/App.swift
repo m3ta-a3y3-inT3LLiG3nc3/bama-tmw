@@ -22,11 +22,11 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", openduet = "OpenDuet", aimock = "aimock", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", openduet = "OpenDuet", aimock = "aimock", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot", hud = "HUD", reaApprovals = "rea Approvals", health = "Health", skills = "Skills", orbit = "Orbit", chat = "Chat"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse, .openduet, .aimock])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse, .openduet, .aimock: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .openduet: "person.2.wave.2"; case .aimock: "testtube.2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("JARVIS", [.hud, .chat, .reaApprovals, .health, .skills, .orbit]), ("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse, .openduet, .aimock])]
+    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse, .openduet, .aimock: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007"; case .hud, .chat, .reaApprovals, .health, .skills, .orbit: "M7-JARVIS" } }
+    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .openduet: "person.2.wave.2"; case .aimock: "testtube.2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles"; case .hud: "circle.hexagongrid"; case .chat: "bubble.left.and.text.bubble.right"; case .reaApprovals: "checkmark.shield.fill"; case .health: "waveform.path.ecg"; case .skills: "books.vertical"; case .orbit: "globe.americas" } }
 }
 
 @main
@@ -34,10 +34,11 @@ struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
     @State private var gate = ApprovalGate(auth: TouchIDAuth())
+    @State private var jarvis = JarvisHub()
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console", id: "console") { RootView().environment(store).environment(bots).environment(gate).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console", id: "console") { RootView().environment(jarvis).task { await jarvis.refresh() }.environment(store).environment(bots).environment(gate).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         MenuBarExtra("M3ta-OS", systemImage: "cube.transparent") { MenuBarPanel().environment(gate) }.menuBarExtraStyle(.window)
         Settings { SettingsView().environment(store).environment(bots) }
     }
@@ -74,6 +75,12 @@ struct RootView: View {
                     case .bots: BotsView()
                     case .brain: BrainView()
                     case .copilot: JarvisLiveView()
+                    case .hud: HUDView()
+                    case .chat: JarvisChatView()
+                    case .reaApprovals: ReaApprovalsView()
+                    case .health: StackHealthView()
+                    case .skills: SkillsSearchView()
+                    case .orbit: OrbitPanelView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
