@@ -22,24 +22,26 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", copilot = "Copilot"
+    case status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    var story: String { switch self { case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .copilot: "sparkles" } }
+    var story: String { switch self { case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
+    @State private var bots = BotStore()
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).frame(minWidth: 900, minHeight: 600) }
-        Settings { SettingsView().environment(store) }
+        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 900, minHeight: 600) }
+        Settings { SettingsView().environment(store).environment(bots) }
     }
 }
 
 struct RootView: View {
     @Environment(Store.self) var store
+    @Environment(BotStore.self) var bots
     @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .status
     var body: some View {
         NavigationSplitView {
@@ -54,12 +56,14 @@ struct RootView: View {
                     case .pairing: PairingView(s: st)
                     case .result: ResultView(s: st)
                     case .mesh: MeshView(s: st)
+                    case .bots: BotsView()
+                    case .brain: BrainView()
                     case .copilot: CopilotStub()
                     }
                 }
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
-        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh() } }
+        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh() } }
     }
 }
 
@@ -199,12 +203,16 @@ struct CopilotStub: View {
 
 struct SettingsView: View {
     @Environment(Store.self) var store
+    @Environment(BotStore.self) var bots
     @AppStorage("meshStatePath") private var path = ""
+    @AppStorage("botMapPath") private var botPath = ""
     var body: some View {
         Form {
             TextField("MeshState JSON path (empty = bundled fixture)", text: $path)
             Text("Loaded from: \(store.sourcePath ?? "none")").font(.caption)
-            Button("Reload") { store.refresh() }
+            TextField("Bot map JSON path (empty = bundled copy)", text: $botPath)
+            Text("Bot map from: \(bots.sourcePath)").font(.caption)
+            Button("Reload") { store.refresh(); bots.refresh() }
             Text("No secrets are stored. Copilot health target: 127.0.0.1:9782 (read-only GET).").font(.caption).foregroundStyle(.secondary)
         }.padding().frame(width: 460)
     }
