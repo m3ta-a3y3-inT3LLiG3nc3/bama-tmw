@@ -22,21 +22,23 @@ final class Store {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case overview = "Overview", approvals = "Approvals", openbot = "OpenBot", opendots = "OpenDots", openmuse = "OpenMuse", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Home", [.overview, .approvals]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot]), ("Studio", [.openbot, .opendots, .openmuse])]
+    var story: String { switch self { case .overview: "M2-HOME"; case .approvals: "M3-JEV"; case .openbot, .opendots, .openmuse: "M6-EMBED"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .overview: "square.grid.2x2"; case .approvals: "checkmark.shield"; case .openbot: "message.badge.waveform"; case .opendots: "circle.grid.3x3"; case .openmuse: "music.note.list"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
+    @State private var gate = ApprovalGate(auth: TouchIDAuth())
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console", id: "console") { RootView().environment(store).environment(bots).environment(gate).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        MenuBarExtra("M3ta-OS", systemImage: "cube.transparent") { MenuBarPanel().environment(gate) }.menuBarExtraStyle(.window)
         Settings { SettingsView().environment(store).environment(bots) }
     }
 }
@@ -59,6 +61,10 @@ struct RootView: View {
                 Group {
                     switch sel ?? .overview {
                     case .overview: OverviewView()
+                    case .approvals: ApprovalsView()
+                    case .openbot: EmbedView(app: EmbeddedApp.all[0]).id("openbot")
+                    case .opendots: EmbedView(app: EmbeddedApp.all[1]).id("opendots")
+                    case .openmuse: EmbedView(app: EmbeddedApp.all[2]).id("openmuse")
                     case .status: StatusView(s: st)
                     case .pairing: PairingView(s: st)
                     case .result: ResultView(s: st)
