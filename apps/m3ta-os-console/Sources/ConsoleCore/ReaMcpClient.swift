@@ -38,7 +38,10 @@ public final class ReaMcpClient: Sendable {
     /// Tools the console may call directly. Everything else is refused (writes need JEV approval).
     public static let readTools: Set<String> = ["rea_orbit_status", "rea_orbit_projects", "rea_orbit_agents", "rea_orbit_tasks", "rea_orbit_roster",
         "rea_orbit_trackers", "rea_orbit_stats", "rea_skills_list", "rea_skills_search", "rea_skills_get", "rea_brains_status", "rea_brains_search",
-        "rea_approvals_list", "rea_ledger_tail", "rea_hyperagent_status", "rea_clianything_status", "rea_phonefarm_status"]
+        "rea_approvals_list", "rea_ledger_tail", "rea_hyperagent_status", "rea_clianything_status", "rea_phonefarm_status",
+        "rea_native_status", "rea_native_sdef", "rea_shortcuts_list"]
+    /// Creator write tools the console may only QUEUE: rea-mcp holds them in the JEV approval inbox; the reply must be `awaiting_approval`.
+    public static let gatedTools: Set<String> = ["rea_shortcuts_run", "rea_fcpxml_build", "rea_compressor_encode", "rea_pixelmator_run", "rea_postiz_draft"]
     public init(url: URL, transport: any McpTransport = URLSessionTransport()) throws {
         guard Self.allowed(url) else { throw ReaMcpError.notLoopback }
         self.url = url; self.transport = transport
@@ -84,6 +87,17 @@ public final class ReaMcpClient: Sendable {
         if let c = r["content"] as? [[String: Any]], let t = c.first?["text"] as? String,
            let o = try? JSONSerialization.jsonObject(with: Data(t.utf8)) as? [String: Any] { return o }
         throw ReaMcpError.badResponse
+    }
+    /// Queue a gated creator action. Returns the held approval id. Throws if rea-mcp did not hold it (nothing may run unapproved).
+    public func queue(_ name: String, _ args: [String: Any]) async throws -> String {
+        guard Self.gatedTools.contains(name) else { throw ReaMcpError.notReadOnly(name) }
+        if name == "rea_fcpxml_build", (args["path"] as? String)?.isEmpty ?? true { throw ReaMcpError.rpc("fcpxml import needs a path") }
+        let r = try await rpc("tools/call", ["name": name, "arguments": args])
+        guard let s = r["structuredContent"] as? [String: Any] else { throw ReaMcpError.badResponse }
+        guard s["status"] as? String == "awaiting_approval", let ap = s["approval"] as? [String: Any], let id = ap["id"] as? String else {
+            throw ReaMcpError.rpc((s["error"] as? String) ?? "rea-mcp did not hold \(name) for approval")
+        }
+        return id
     }
     public func callReadData(_ name: String, _ args: [String: Any] = [:]) async throws -> Data {
         try JSONSerialization.data(withJSONObject: try await callRead(name, args)["output"] ?? [:])
