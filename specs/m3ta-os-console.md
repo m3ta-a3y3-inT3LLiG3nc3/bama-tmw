@@ -2,7 +2,7 @@
 
 The local host surface for M3ta-OS on the Mac: mesh status, Pluto status, Ruth Local pairing, and approval-gated task dispatch to Pluto, in one native window. Replaces: the hirepluto.ai Manage pages for daily status, and the written MVP status map for a quick "what is live" answer. Taken from the M3ta-OS MVP status map (2026-10-22) and the Pluto mesh blueprint and inventory (2026-10-26). Working title: the product name is M3ta's call.
 
-State of the build, 2026-10-26: no app is scaffolded yet. This spec and its fixture are the first intel merged into the bama-tmw fork for this app. The pipeline starts here: copy the Brief into docs/BRIEF.md and the Stories into docs/STORIES.md, then run new-mac-app and improve-loop.
+State of the build, 2026-10-29: spec, fixture, and a `new-mac-app` scaffold are on `origin/main`. CopilotKit in v1 was approved 2026-10-27 and is recorded below. Feature-branch ConsoleCore work is not this file's merge. See [m3ta-os-lead-app.md](m3ta-os-lead-app.md).
 
 ## Brief
 
@@ -51,11 +51,18 @@ MVP status map.
 ## Look
 Native, system accent color, one design system per the BAMA design skills.
 
+## Copilot (in version one, approved 2026-10-27)
+- CopilotKit chat panel that talks to JARVIS's existing runtime only:
+  http://127.0.0.1:9782/api/copilotkit and AG-UI at /agui. No second runtime.
+- Local models first (Ollama on 127.0.0.1:11434), $0; no cloud keys in the app.
+- Copilot actions that send, spend, or delete go through the JEV approval gate.
+- If JARVIS is down, show an offline card; the rest of the console still works.
+
 ## Not in version one
 - Live polling of Pluto (no API exists; state is manual-refresh)
 - Notion connection or page curation inside the app (stays in Pluto/Notion)
 - Vault browsing or Pluto vault reach (later milestone, after pairing test)
-- CopilotKit or Ko3mand surfaces
+- Ko3mand surfaces
 - Storing or displaying any credential
 ```
 
