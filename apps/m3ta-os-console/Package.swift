@@ -4,15 +4,10 @@ import PackageDescription
 let package = Package(
     name: "M3taOSConsole",
     platforms: [.macOS(.v26)],
+    products: [.executable(name: "M3taOSConsole", targets: ["M3taOSConsole"])],
     targets: [
-        // Rules and data logic with no SwiftUI, so tests run without the app.
-        .target(name: "M3taOSConsoleKit"),
-        .executableTarget(
-            name: "M3taOSConsole",
-            dependencies: ["M3taOSConsoleKit"],
-            // App code runs on the main thread unless you say otherwise.
-            swiftSettings: [.defaultIsolation(MainActor.self)]
-        ),
-        .testTarget(name: "M3taOSConsoleKitTests", dependencies: ["M3taOSConsoleKit"]),
+        .target(name: "ConsoleCore", resources: [.copy("Resources/mesh-state-2026-10-26.json"), .copy("Resources/bot-map-20261027.json")]),
+        .executableTarget(name: "M3taOSConsole", dependencies: ["ConsoleCore"]),
+        .testTarget(name: "ConsoleCoreTests", dependencies: ["ConsoleCore"]),
     ]
 )

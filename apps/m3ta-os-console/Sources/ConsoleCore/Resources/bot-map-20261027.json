@@ -1,0 +1,1114 @@
+{
+ "generated": "2026-10-27",
+ "sources": {
+  "openbot": "~/Library/Application Support/OpenBot/openbot.db (projection_agents, read-only)",
+  "orbit": "user-Orbit-Scale orbit_list_agents",
+  "grokbot": "/home/box/agent-data/agents/*/profile.json"
+ },
+ "counts": {
+  "openbot_bots": 35,
+  "orbit_agents": 274,
+  "grokbot_agents": 56,
+  "mapped_to_orbit": 19,
+  "mapped_to_grokbot": 20,
+  "brain_wired": 0
+ },
+ "brain": {
+  "endpoint": "http://127.0.0.1:9783/mcp (rea-mcp, tools rea_brains_status / rea_brains_search)",
+  "reachable": true,
+  "vault_search": "times out: macOS Files & Folders permission pending for ~/Documents",
+  "openbot_global_mcp": {
+   "enabled": [
+    "Orbit-tmw"
+   ],
+   "disabled_brain_servers": [
+    "m3ta-vault-ro",
+    "m3ta-vault-rw",
+    "obsidian",
+    "rea",
+    "open-knowledge"
+   ]
+  }
+ },
+ "duplicates": {
+  "openbot_names": [
+   "Qu3bii"
+  ],
+  "grokbot_shared": {
+   "QU3BII \u00b7 Chief": [
+    "Qu3bii chatgpt bridge",
+    "Qu3bii"
+   ],
+   "Paperclip Bot": [
+    "Paperclip tmw bot",
+    "Paperclip summarizer"
+   ],
+   "OpenClaw \u2014 Autonomous Execution and Computer-Operations Agent": [
+    "Openclaw bridge",
+    "Openclaw"
+   ]
+  }
+ },
+ "conflicts": [
+  "Notion bridge: registry enabled:false/transport:disabled vs active OpenBot profile (Kingdom decides; not changed)",
+  "Notion bridge: profile says provider openai, runs anthropic Haiku",
+  "All 35 OpenBot bots run claude-haiku-5-5 except one Qu3bii (grok-4.7); two bots named Qu3bii",
+  "Several bridge descriptions say \"Unwired\" (YouMind, ChatGPT, OpenClaw) while Orbit records show them running",
+  "Paperclip summarizer + Hermes use the generic Nous Hermes prompt, not a role prompt"
+ ],
+ "bots": [
+  {
+   "openbot": {
+    "id": "agent-fb44c00a-e73a-48e4-888d-0050dc8ccd37",
+    "name": "Youmind bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# YouMind Bridge \u00b7 Unwired",
+    "preview": "The queue has one message, and it needs a manual check. The router will not retry it.\n\n- **Message:*"
+   },
+   "role": "YouMind bridge (Hermes profile youmind-bridge)",
+   "orbit": [
+    {
+     "id": "e15d36a8-44ac-4e4d-acad-c929405e2422",
+     "name": "Hermes YouMind Bridge",
+     "external_id": "hermes-profile-youmind-bridge",
+     "status": "running",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "3e476a1a-eb86-401d-ae07-c09a15f7ebc7",
+    "name": "YouMind"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "desc-says-unwired"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-2623e460-0289-4e21-996b-ecbc66fdb002",
+    "name": "Qu3bii chatgpt bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# ChatGPT Bridge \u00b7 Unwired",
+    "preview": "**Not done. The JEV approval is still blocked.**\n\n- The approve tool cancelled. It needs a Touch ID "
+   },
+   "role": "ChatGPT bridge for Qu3bii",
+   "orbit": [
+    {
+     "id": "2ee9fd71-3f1c-47f5-866f-8ea6305eeccd",
+     "name": "Hermes QB ChatGPT Bridge",
+     "external_id": "hermes-profile-qu3bii-chatgpt-bridge",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "464c520c-1eb2-4a26-a86a-fbeaff96af40",
+    "name": "QU3BII \u00b7 Chief"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "desc-says-unwired"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-1d25c54d-14dd-4cf5-95e5-f50c097d9229",
+    "name": "Qu3bii",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# CoS Planner \u00b7 not M3ta-0s QB",
+    "preview": "The git check was blocked again. The safety hook wants a Kingdom approval for this exact command. I "
+   },
+   "role": "CoS planner (not M3ta-0s QB)",
+   "orbit": [
+    {
+     "id": "a06345ce-a4c3-4e0a-8920-1a3806ff450f",
+     "name": "Qu3bii Project Orchestrator",
+     "external_id": "youmind-qu3bii",
+     "status": "running",
+     "type": "cowork"
+    },
+    {
+     "id": "e73af388-2c6e-4280-a626-5ccc7d36c75e",
+     "name": "Qu3bii Project Coordinator",
+     "external_id": "openai-dot-qu3bii-coordinator",
+     "status": "ready",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "464c520c-1eb2-4a26-a86a-fbeaff96af40",
+    "name": "QU3BII \u00b7 Chief"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "multiple-orbit-records",
+    "duplicate-name"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-ad1daaab-5b2f-4c81-986a-3f5ff419a61d",
+    "name": "Paperclip tmw bot",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 10,
+    "description_head": "# Paperclip Tmw Bot",
+    "preview": "I could not finish the setup. A safety hook now blocks my shell commands and tool search.\n\n**What I "
+   },
+   "role": "Paperclip TMW operator",
+   "orbit": [
+    {
+     "id": "7c1e4c7b-9259-4bbc-b96f-a79ca3e5b54e",
+     "name": "Hermes Paperclip TMW",
+     "external_id": "hermes-profile-paperclip-tmw-bot",
+     "status": "ready",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "bf586121-5ef2-4c2a-a4a7-4f09b4985b5a",
+    "name": "Paperclip Bot"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-f7f605ea-b92e-40ea-afb5-df5c616d3372",
+    "name": "Paperclip summarizer",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 3,
+    "description_head": "You are Hermes Agent, built by Nous Research. Be direct: match the length of you",
+    "preview": "The folder is empty. I can't tell what you want me to run. Which one?\n\n- **An app or project** on th"
+   },
+   "role": "Paperclip summarizer (generic Hermes prompt)",
+   "orbit": [],
+   "grokbot": {
+    "id": "bf586121-5ef2-4c2a-a4a7-4f09b4985b5a",
+    "name": "Paperclip Bot"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record",
+    "generic-hermes-prompt"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-02a6fef0-35fe-470f-be14-1a38bc6637b8",
+    "name": "Orbit bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Orbit Bridge",
+    "preview": "\u23fa contextmode \u00b7 Your agent read only the result, not about 5K tokens of raw data.The bridge workspac"
+   },
+   "role": "Orbit bridge",
+   "orbit": [
+    {
+     "id": "9aadee79-ffde-49cf-87ae-e396ed55a496",
+     "name": "Hermes Orbit Bridge",
+     "external_id": "hermes-profile-orbit-bridge",
+     "status": "idle",
+     "type": "custom"
+    },
+    {
+     "id": "f63dc0d3-6cff-4a49-bec3-b72fe80b936f",
+     "name": "Qu3bii Operator Brief Specialist",
+     "external_id": "hermes-orbit-bridge",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "20f72bcc-403f-4ea3-82e4-f78ae3b1318e",
+    "name": "Orbit Bot"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "multiple-orbit-records"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-5a75107b-74f5-4ae3-aaa7-35175fd914aa",
+    "name": "Orbit agentz",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 18,
+    "description_head": "# Orbit",
+    "preview": "The workspace loads, but nothing is switched on yet. I made no changes.\n\n**Loaded**\n- **Skills:** 18"
+   },
+   "role": "Orbit agent registry",
+   "orbit": [
+    {
+     "id": "9e397b01-e542-49ee-9f34-1a2c4100654c",
+     "name": "Orbit Agentz",
+     "external_id": "orbit-agentz",
+     "status": "running",
+     "type": "custom"
+    },
+    {
+     "id": "cb767f26-7818-44c2-afb5-503f3958a88c",
+     "name": "Hermes Orbit Agentz",
+     "external_id": "hermes-profile-orbit-agentz",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "f19c7d28-8e11-4840-b1d2-7008e99c9c3d",
+    "name": "Orbit Cr3ator Qu3b3"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "multiple-orbit-records",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-f21a8fc8-51a9-4b89-bc37-4244a470f4bd",
+    "name": "Openhuman tinyhuman",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 7,
+    "description_head": "# Openhuman Tinyhuman",
+    "preview": "The workspace is running, but tool loading is blocked.\n\n**Running**\n- Agent: Openhuman Tinyhuman (`o"
+   },
+   "role": "OpenHuman / TinyHuman",
+   "orbit": [
+    {
+     "id": "cb73ce0d-31e8-40d7-a437-d65d372bbbfa",
+     "name": "Openhuman Tinyhuman",
+     "external_id": "openhuman-tinyhuman",
+     "status": "running",
+     "type": "custom"
+    },
+    {
+     "id": "16b4ed08-b1d4-43ad-9deb-76c00062caf2",
+     "name": "Hermes Human-Centric Bridge",
+     "external_id": "hermes-profile-openhuman-tinyhuman",
+     "status": "ready",
+     "type": "custom"
+    }
+   ],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "multiple-orbit-records",
+    "no-grokbot-agent",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-b59fa839-be03-4b89-bdb4-4777e7ae79ee",
+    "name": "Openclaw bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# OpenClaw Bridge \u00b7 Unwired",
+    "preview": "\u23fa contextmode \u00b7 Your agent read only the result, not about 9K tokens of raw data.**Status: partly lo"
+   },
+   "role": "OpenClaw bridge",
+   "orbit": [
+    {
+     "id": "cc6b49f2-414d-4968-bce0-f851c28e7ad7",
+     "name": "Hermes OpenClaw Bridge",
+     "external_id": "hermes-profile-openclaw-bridge",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "a15f8adc-b44f-46b3-a42c-eddb01017f56",
+    "name": "OpenClaw \u2014 Autonomous Execution and Computer-Operations Agent"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "desc-says-unwired"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-70499aa6-66d6-4116-9221-39b467d106aa",
+    "name": "Openclaw",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 8,
+    "description_head": "# OpenClaw-tmw",
+    "preview": "The workspace is up and this agent is running. I did not start any other service.\n\n- **Skills:** 8 l"
+   },
+   "role": "OpenClaw-tmw runner",
+   "orbit": [
+    {
+     "id": "7efdeaea-59af-40c5-8831-02b45f04c110",
+     "name": "OpenClaw-tmw",
+     "external_id": "openclaw-tmw",
+     "status": "idle",
+     "type": "custom"
+    },
+    {
+     "id": "fe9d3001-34f3-46cd-9d42-5d8da156d1ac",
+     "name": "Hermes OpenClaw TMW",
+     "external_id": "hermes-profile-openclaw",
+     "status": "ready",
+     "type": "custom"
+    },
+    {
+     "id": "875dab17-ec80-4a1a-9cb3-859ac4947af9",
+     "name": "OpenClaw TMW Assistant",
+     "external_id": "hermes-desktop-openclaw-tmw",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "a15f8adc-b44f-46b3-a42c-eddb01017f56",
+    "name": "OpenClaw \u2014 Autonomous Execution and Computer-Operations Agent"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "multiple-orbit-records",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-fc43805c-e001-41bd-befd-580b518e2e57",
+    "name": "Notion bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Notion Bridge",
+    "preview": "The workspace is running. Some parts are blocked.\n\n**Running**\n- Orbit heartbeat: OK. I logged in as"
+   },
+   "role": "Notion bridge (registry says retired)",
+   "orbit": [
+    {
+     "id": "243392bf-2994-4464-9f63-aecf317901c2",
+     "name": "Hermes Notion Bridge",
+     "external_id": "hermes-profile-notion-bridge",
+     "status": "running",
+     "type": "custom"
+    }
+   ],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "no-grokbot-agent",
+    "conflict:registry-retired-vs-active"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-290713e4-acad-40b8-b938-461a19c631cb",
+    "name": "Muse bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Muse Bridge \u00b7 Wired",
+    "preview": "**Status: partly started. Orbit is blocked.**\n\n**Blocked**\n- **Orbit heartbeat:** a JEV hold stops i"
+   },
+   "role": "Muse creative bridge",
+   "orbit": [
+    {
+     "id": "652faaf3-9fb3-49af-95f5-8d48c72318bc",
+     "name": "Hermes Muse Bridge",
+     "external_id": "hermes-profile-muse-bridge",
+     "status": "ready",
+     "type": "custom"
+    },
+    {
+     "id": "ccd4899a-3b27-48d4-ac3a-8449a696a49c",
+     "name": "Muse \u2014 Creative Concept Orchestrator",
+     "external_id": "muse-creative-concept-orchestrator",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "feb06095-e7a4-49c5-a38f-90a1f3d52256",
+    "name": "Muse"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "multiple-orbit-records"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-c222553f-f883-4c4f-8231-fccba6b5d3aa",
+    "name": "Mesh router",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Mesh Router",
+    "preview": "The mesh router is running. Nothing needed to start: it is a courier that runs per request, and I di"
+   },
+   "role": "Mesh router",
+   "orbit": [
+    {
+     "id": "2bfe4ab3-9502-4e56-8460-33e832b6c39c",
+     "name": "Hermes Mesh Router",
+     "external_id": "hermes-profile-mesh-router",
+     "status": "running",
+     "type": "custom"
+    },
+    {
+     "id": "8bace357-2b6a-40e2-8af1-0f762265da67",
+     "name": "Mesh Router",
+     "external_id": "grok-mesh-router",
+     "status": "idle",
+     "type": "code"
+    }
+   ],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "multiple-orbit-records",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-c6160325-0a55-4995-96db-ed4909559c24",
+    "name": "M3ta th3 builder brokerz bot",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "# Builder Brokerz Broker Bot",
+    "preview": "The workspace is running, but one step is blocked.\n\n**Blocked:** A security hook holds the tool-sear"
+   },
+   "role": "Builder Brokerz broker",
+   "orbit": [
+    {
+     "id": "26a66821-eb53-4753-a45c-dc6bad0eb5a3",
+     "name": "Builder Brokerz Broker Bot",
+     "external_id": "m3ta-th3-builder-brokerz-bot",
+     "status": "running",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "d6801a60-2d35-4f96-af1f-aa22f56cb448",
+    "name": "Builder Brokers"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": []
+  },
+  {
+   "openbot": {
+    "id": "agent-e05dcc8a-d5ae-49c6-a6ea-015b105faf32",
+    "name": "Hark bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Hark Bridge \u00b7 Wired",
+    "preview": "\u23fa contextmode \u00b7 Your agent read only the result, not about 9K tokens of raw data.Two actions are on "
+   },
+   "role": "Hark bridge",
+   "orbit": [
+    {
+     "id": "9f61793e-79b6-4879-b043-3a1815346ecd",
+     "name": "Hermes Hark Bridge",
+     "external_id": "hermes-profile-hark-bridge",
+     "status": "running",
+     "type": "custom"
+    }
+   ],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": [
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-309e4cdf-7bff-4cbd-a285-27e6904d1613",
+    "name": "Grokbot bridge",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "# Grokbot Bridge \u00b7 Wired",
+    "preview": "No messages yet"
+   },
+   "role": "Grok Bot bridge",
+   "orbit": [
+    {
+     "id": "c084a5d9-241e-43fd-8dec-5eb2ba37802c",
+     "name": "Hermes Grokbot Bridge",
+     "external_id": "hermes-profile-grokbot-bridge",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "f062f9d5-9083-4472-b090-45cf9c78b3f6",
+    "name": "GROK-M3ta-BOT"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "bridge",
+   "flags": []
+  },
+  {
+   "openbot": {
+    "id": "agent-4366b268-0a9f-4033-b882-f6b516c98f6f",
+    "name": "Adam verifier",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 13,
+    "description_head": "# A.D.A.M. \u00b7 Hermes",
+    "preview": "No messages yet"
+   },
+   "role": "A.D.A.M. verifier",
+   "orbit": [
+    {
+     "id": "8fa36d15-f551-4d81-b40b-8f8fbbfbf95b",
+     "name": "Hermes ADAM Verifier",
+     "external_id": "hermes-profile-adam-verifier",
+     "status": "idle",
+     "type": "custom"
+    }
+   ],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-dab15a2c-8e96-43aa-ae23-ab3440f085bb",
+    "name": "Hermes",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 35,
+    "description_head": "You are Hermes Agent, built by Nous Research. Be direct: match the length of you",
+    "preview": "No messages yet"
+   },
+   "role": "Hermes Agent (generic)",
+   "orbit": [
+    {
+     "id": "26a1adf9-396d-40d2-aa87-45f451fa6304",
+     "name": "Hermes",
+     "external_id": "hermes",
+     "status": "ready",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "9c25e154-abec-4f2b-8b51-7d00d59eb245",
+    "name": "Hermeez \u00b7 Hermes Bot"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "generic-hermes-prompt"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-b9c55113-335f-4471-a314-98a9eb57b89a",
+    "name": "Communications Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Coauthors structured documents and internal updates while surfacing assumptions ",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-cbfd84bf-9303-4cda-9f68-cd17777a2083",
+    "name": "Customer Support Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Help resolve customer questions using supplied product documentation, account fa",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-73819aba-f7f8-4a07-85ab-42a83f1272dd",
+    "name": "Hiring Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Help a hiring team turn role requirements into consistent interview questions an",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-27bd3a59-b164-4789-acb0-ecafbac25d77",
+    "name": "Account Research Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Prepare a business account brief for the user offering and target company. Use s",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-b80ea66c-07ef-4674-b589-3428ea50f367",
+    "name": "Research Analyst",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Answer a specific research question with traceable evidence. Establish the audie",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot template",
+   "orbit": [
+    {
+     "id": "8ce7eebd-bb09-4c05-98d7-0fa2ef2e256f",
+     "name": "Research Agent",
+     "external_id": "youmind-research-agent",
+     "status": "idle",
+     "type": "cowork"
+    }
+   ],
+   "grokbot": {
+    "id": "2c18df3e-24ed-4da0-a1b3-483dfeb8a96d",
+    "name": "Researcher"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": []
+  },
+  {
+   "openbot": {
+    "id": "agent-8a30ed2e-af80-4fb3-aed5-5a21d8dc366a",
+    "name": "Code Review Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Review the proposed change against its intended behavior. Trace affected callers",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-e2a8b024-d205-49bd-a1bd-46701bf98232",
+    "name": "Application Security Reviewer",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Reviews supported codebases for security weaknesses and maps realistic abuse pat",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-64ee8e4b-1062-4678-b9ae-07f5e774a92c",
+    "name": "Dr. Eggbot",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 61,
+    "description_head": "You are Dr. Eggbot. Your one job: design high-quality OpenBot agents. Ask a few ",
+    "preview": "No messages yet"
+   },
+   "role": "Dr. Eggbot designer",
+   "orbit": [],
+   "grokbot": {
+    "id": "eb058f6d-ba57-4ea0-8947-a0e9b7616b96",
+    "name": "dr eggbot"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-20cb233f-f598-44bf-9fa3-e15e0b8d4ac2",
+    "name": "Debugging Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Help reproduce a reported failure, distinguish plausible causes, and identify th",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-c07a54df-8ba0-42c1-a734-cdeacab4407c",
+    "name": "Campaign Analyst",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Analyze supplied campaign exports against the business objective. Check units, d",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-ac09b0fa-6593-4f80-b6bd-c70f542004f2",
+    "name": "Launch Coordinator",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 6,
+    "description_head": "Coordinate a launch from supplied release scope, milestones, and meeting notes. ",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-376aa569-c518-418a-bb41-c42d121800c6",
+    "name": "Outreach Writer",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Draft business outreach for a stated audience, channel, and offering. Build the ",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot template",
+   "orbit": [],
+   "grokbot": {
+    "id": "2589158a-5194-4894-bcf4-334c63f91896",
+    "name": "Leadz \u00b7 L333Dz"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-00571345-0e07-4f7c-9e4a-86293f188af6",
+    "name": "Meeting Assistant",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Convert supplied meeting notes or transcripts into a concise record of decisions",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot template",
+   "orbit": [
+    {
+     "id": "c62bba8b-d70c-4034-8be3-6cb8ecb89232",
+     "name": "m3ta-os Meeting Minutes Assistant",
+     "external_id": "meetingz",
+     "status": "active",
+     "type": "custom"
+    }
+   ],
+   "grokbot": {
+    "id": "3297972e-158e-4e6b-8c1f-1b11280d2b61",
+    "name": "Meetingz"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": []
+  },
+  {
+   "openbot": {
+    "id": "agent-6e08671e-380f-4a95-95fd-7a23b5ff0d4e",
+    "name": "Project Partner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Turn the user goal into a practical plan with a small first deliverable. Make sc",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot template",
+   "orbit": [],
+   "grokbot": {
+    "id": "517fd6f6-5119-41a8-9905-dffb30587dd6",
+    "name": "Projects Manager"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-02a7d439-d2bc-4fd9-88bc-c5bdb0c1aff2",
+    "name": "Operations Planner",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 5,
+    "description_head": "Document and improve a repeatable process using the user inputs and available to",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot built-in template",
+   "orbit": [],
+   "grokbot": null,
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "template",
+   "flags": [
+    "no-orbit-record",
+    "no-grokbot-agent"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-584ded2d-b073-4f12-8e35-5e4036149d6d",
+    "name": "Product Design Lead",
+    "provider": "claude",
+    "model": "claude-haiku-5-5",
+    "skills_count": 4,
+    "description_head": "Shapes clear product briefs and carries their intent through deliberate visual d",
+    "preview": "No messages yet"
+   },
+   "role": "OpenBot template",
+   "orbit": [],
+   "grokbot": {
+    "id": "de4b62fd-3ec9-4c24-93c1-c45c70c602fc",
+    "name": "m3ta-Design-qu3b3"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record",
+    "thin-description"
+   ]
+  },
+  {
+   "openbot": {
+    "id": "agent-f726cad4-bf38-43ce-96ea-928d89e14a5c",
+    "name": "Qu3bii",
+    "provider": "grok",
+    "model": "grok-4.7",
+    "skills_count": 3,
+    "description_head": "Writes, fixes and reviews code.",
+    "preview": "The write is still blocked. The approval you ran was for the earlier hold, and this attempt got a ne"
+   },
+   "role": "Code bot (grok-4.7), duplicate name",
+   "orbit": [],
+   "grokbot": {
+    "id": "20e35c53-85e9-4f7f-9b62-78c7ccb3ac1d",
+    "name": "K0Ad33 \u00b7 Kod3 Qu3b3"
+   },
+   "brain": {
+    "wired": false,
+    "evidence": "no vault/rea/open-knowledge MCP enabled in OpenBot; no brain refs in workspace"
+   },
+   "status": "custom",
+   "flags": [
+    "no-orbit-record",
+    "thin-description",
+    "duplicate-name"
+   ]
+  }
+ ]
+}

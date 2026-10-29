@@ -2,7 +2,7 @@
 
 Rollup for the flagship native Mac app in this fork: M3ta-OS Console. It folds in the 2026-10-26 BAMA buildout plan, the 2026-10-27 CopilotKit-in-v1 approval, and a local contact-card surface. Sibling app: [m3ta-tasks.md](m3ta-tasks.md). Implementation detail: [m3ta-os-console.md](m3ta-os-console.md).
 
-State of the build, 2026-10-29: `origin/main` already has the console spec, the redacted seed fixture, and a `new-mac-app` scaffold (`apps/m3ta-os-console`). Feature branches ahead of main (`agent/k0ad33/bama-console-m2`, `agent/k0ad33/console-m3`) have a different ConsoleCore implementation plus a CopilotKit LangGraph starter. Those branches are not this spec's merge. A later PR must pick one console implementation.
+State of the build, 2026-10-29: ConsoleCore M3 is the console tree being merged onto main (Home, approvals, health, JARVIS loopback). The `new-mac-app` template sources were dropped from `apps/m3ta-os-console` so the two trees do not mix. CopilotKit in v1 stays JARVIS-only. The Next.js LangGraph starter on `bama-console-m2` stays off main.
 
 ## Brief
 
@@ -88,9 +88,9 @@ Milestone 0, already on main: spec, fixture, README row, `new-mac-app` scaffold.
 
 Milestone 1 to 3 live on feature branches, not on main:
 
-- [ ] Native window reads MeshState from the bundled fixture (M1, `agent/k0ad33/bama-console-m1`).
-- [ ] JARVIS loopback health, models, and offline card (M2, `agent/k0ad33/bama-console-m2`).
-- [ ] Approval inbox, Touch ID, GET-only loopback backend on 127.0.0.1:9791 (M3, `agent/k0ad33/console-m3`, local only).
+- [x] Native window reads MeshState from the bundled fixture (M1).
+- [x] JARVIS loopback health, models, and offline card (M2).
+- [x] Approval inbox, Touch ID, GET-only loopback backend on 127.0.0.1:9791 (M3). Code is in this merge; live Touch ID still needs a Mac run.
 
 Milestone 4 to 8 still open:
 
