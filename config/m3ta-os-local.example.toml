@@ -1,0 +1,39 @@
+# M3ta-OS Console — free local stack wiring (example; copy to m3ta-os-local.toml, never commit secrets).
+# Secrets are referenced by Keychain item name only; values live in the macOS Keychain.
+
+[policy]
+approval_tap_required = true          # every outbound action / dispatch needs an explicit tap
+local_only = true                     # warn on any endpoint outside loopback or Tailscale (100.64.0.0/10, *.ts.net)
+allowed_networks = ["127.0.0.1", "::1", "100.64.0.0/10", "*.ts.net"]
+secrets_store = "keychain"            # no tokens, keys or codes in files or SwiftData
+
+[ollama]
+base_url = "http://127.0.0.1:11434/v1"   # OpenAI-compatible
+chat_model = "m3ta/qwen3-abl-8b-nothink-32k"
+vision_model = "qwen2.5vl:7b"
+embed_model = "nomic-embed-text"
+# Host has 48 GB RAM; 7–8B models fit comfortably alongside the app.
+
+[jev]
+repo = "m3ta-a3y3-inT3LLiG3nc3/jev-ultrafast"
+backend = "openai"                    # JEV_BACKEND=openai -> local Ollama, no TypeSafe key
+action_model_base_url = "http://127.0.0.1:11434/v1"
+action_model = "m3ta/qwen3-abl-8b-nothink-32k"
+text_model_base_url = "http://127.0.0.1:11434/v1"
+scope = "websites_without_connector"
+
+[n8n]
+base_url = "http://127.0.0.1:5678"
+api_key_keychain_item = "m3ta-os.n8n.api-key"
+
+[obsidian]
+vault_path = "~/MetaOS-Memory"        # adjust to the real vault path
+access = "read-only"
+
+[orbit]
+access = "read-only"
+project = "m3tahu3managentik0s"
+token_keychain_item = "m3ta-os.orbit.token"
+
+[openbot]
+base_url = "http://127.0.0.1:3000"    # local OpenBot (CopilotKit) shown in-app; unverified port
