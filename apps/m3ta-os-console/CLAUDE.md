@@ -5,8 +5,8 @@ SwiftData database and no server.
 
 ## Layout
 
-- `Sources/M3taOSConsole/` the app. `App.swift` has the window, menus, and the database location.
-- `Sources/M3taOSConsoleKit/` rules and data logic with no SwiftUI. Tests in `Tests/M3taOSConsoleKitTests/`.
+- `Sources/M3taOSConsole/` the app. `App.swift` has the window, menus, and screens.
+- `Sources/ConsoleCore/` rules and data logic with no SwiftUI. Tests in `Tests/ConsoleCoreTests/`.
 - `Package.swift` a Swift package. There is no Xcode project.
 - `build.sh` builds, signs, and installs `~/Applications/M3taOSConsole.app`.
 - `Icon/AppIcon.icon` the app icon, an Icon Composer file (JSON plus SVG layers). `build.sh` compiles it with `tools/make_icon.sh`; `tools/icon_review.sh` renders every look into one PNG.

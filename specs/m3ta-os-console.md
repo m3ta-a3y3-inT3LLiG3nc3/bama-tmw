@@ -2,7 +2,7 @@
 
 The local host surface for M3ta-OS on the Mac: mesh status, Pluto status, Ruth Local pairing, and approval-gated task dispatch to Pluto, in one native window. Replaces: the hirepluto.ai Manage pages for daily status, and the written MVP status map for a quick "what is live" answer. Taken from the M3ta-OS MVP status map (2026-10-22) and the Pluto mesh blueprint and inventory (2026-10-26). Working title: the product name is M3ta's call.
 
-State of the build, 2026-10-29: spec, fixture, and a `new-mac-app` scaffold are on `origin/main`. CopilotKit in v1 was approved 2026-10-27 and is recorded below. Feature-branch ConsoleCore work is not this file's merge. See [m3ta-os-lead-app.md](m3ta-os-lead-app.md).
+State of the build, 2026-10-29: ConsoleCore M3 (Home, approvals, health, JARVIS loopback) is the app tree on this branch. CopilotKit in v1 stays JARVIS-only. Seed fixture phone and emails are placeholders. See [m3ta-os-lead-app.md](m3ta-os-lead-app.md).
 
 ## Brief
 
@@ -172,6 +172,15 @@ Acceptance:
 - [manual] Firing the configured Trigger records a Woke entry; a failed
   POST shows the error and keeps the envelope unsent.
 Status: todo
+
+## M1b Copilot
+
+### S-007 Copilot panel through JARVIS runtime
+As M3ta, I want a Copilot panel that answers about mesh state through JARVIS's
+CopilotKit runtime on 127.0.0.1:9782, using local models first.
+Acceptance: panel connects to /api/copilotkit (AG-UI /agui); offline card with
+retry when 9782 is down; no keys stored; consequential actions held by JEV.
+
 
 ## M3 Dropped for v1
 - Live Pluto polling or sync (no API exists)
