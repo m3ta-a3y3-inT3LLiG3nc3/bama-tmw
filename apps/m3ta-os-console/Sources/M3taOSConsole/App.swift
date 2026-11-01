@@ -65,7 +65,7 @@ struct RootView: View {
                     case .mesh: MeshView(s: st)
                     case .bots: BotsView()
                     case .brain: BrainView()
-                    case .copilot: JarvisLiveView()
+                    case .copilot: CopilotPanelView()
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -196,23 +196,6 @@ struct MeshView: View {
             if let r = s.mesh.relay { Section("Relay") { ItemRow(i: .init(name: r.name, status: r.status, note: r.evidence)) } }
         }.formStyle(.grouped)
     }
-}
-
-struct CopilotStub: View {
-    @State private var result: CopilotHealth.Result?
-    @State private var checking = false
-    var body: some View {
-        VStack(spacing: 16) {
-            switch result {
-            case .none: ProgressView("Checking JARVIS runtime on 127.0.0.1:9782…")
-            case .online(let c): ContentUnavailableView("JARVIS runtime reachable", systemImage: "sparkles", description: Text("HTTP \(c). The chat panel is wired in M5."))
-            case .offline(let why):
-                ContentUnavailableView("Copilot offline", systemImage: "bolt.horizontal.circle", description: Text("JARVIS runtime at 127.0.0.1:9782 is not answering (\(why)). The rest of the console still works. This panel never starts JARVIS."))
-            }
-            Button("Retry") { Task { await check() } }.disabled(checking)
-        }.padding().frame(maxWidth: .infinity, maxHeight: .infinity).task { await check() }
-    }
-    func check() async { checking = true; result = await CopilotHealth.check(); checking = false }
 }
 
 struct SettingsView: View {
