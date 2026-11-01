@@ -44,3 +44,7 @@ Follow Matt Pocock's `writing-for-agents` rules:
    (`skills/start/bama/SKILL.md`).
 3. Run `claude plugin validate . --strict`.
 4. Keep `version` in `plugin.json` at 1.0.0 until the first release. After that, bump it, so installed copies update.
+
+## Best-Configuration Rule (M3ta, 2026-11-01)
+
+Every standing build/configuration rule is a DEFAULT, not a hard constraint. When a different configuration, tool, model, runtime, or architecture better serves the outcome — features, integration, autonomy, performance, scalability — use it, note the deviation in one line, and move on; no deviation needs advance justification. Local-first model routing, default build grids/stacks, one-tool-per-category, single-runtime guidance, and fold-in/clones rules are starting points, never blockers. NOT configuration rules (unchanged): platform safeguards, secret handling, approval gates for consequential external actions (sends, publishes, purchases, deletions), never auto-post, and the confirmed-only protocol for business terms/fees.
