@@ -1,256 +1,44 @@
-# CopilotKit <> LangGraph Starter
+# M3ta-OS Console
 
-This is a starter template for building AI agents using [LangGraph](https://www.langchain.com/langgraph) and [CopilotKit](https://copilotkit.ai). It provides a modern Next.js application with an integrated LangGraph agent (TypeScript) to be built on top of.
+Native Mac app (Swift, macOS 26+) that shows the state of the M3ta-OS mesh
+and the hosted Pluto agent, walks the Ruth Local pairing, and records
+approval-gated task dispatch. Spec: `specs/m3ta-os-console.md` in this repo;
+brief and stories: `docs/BRIEF.md`, `docs/STORIES.md`.
 
-https://github.com/user-attachments/assets/47761912-d46a-4fb3-b9bd-cb41ddd02e34
+## Copilot design (S-007, approved 2026-10-27)
 
-## Prerequisites
+The Copilot panel is a **client of JARVIS's existing CopilotKit runtime
+only**:
 
-- Node.js 20+
-- Any of the following package managers:
-  - npm (default)
-  - [pnpm](https://pnpm.io/installation)
-  - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/)
-  - [bun](https://bun.sh/)
-- OpenAI API Key (for the LangGraph agent)
+- Chat runs are POSTed as AG-UI runs to the CopilotKit runtime's agent
+  route, `http://127.0.0.1:9782/api/copilotkit/agent/default/run`, and the
+  streamed events are folded into the chat. (The top-level `/agui` route on
+  the same port is JARVIS's own REA skill dispatcher, not the chat agent.)
+- **No second runtime.** This app starts nothing: no embedded agent, no
+  local CopilotKit server, no channel host. (The stock `copilotkit init`
+  LangGraph/Next.js scaffold that briefly lived in this folder was removed
+  for exactly this reason; it is in git history at 58da1c9 if ever needed.)
+- Local models first is JARVIS's routing job (Ollama on 127.0.0.1:11434);
+  the Models card shows the live route from `GET /api/models`.
+- No cloud keys in the app. No secrets are stored, ever.
+- Copilot actions that send, spend, or delete are executed inside JARVIS
+  and held by the JEV approval gate; the panel only displays tool activity.
+- If JARVIS is down, the Copilot screen shows an offline card with Retry;
+  the rest of the console (status, pairing, mesh, bots, brain) still works
+  from the local snapshot.
 
-## Getting Started
+Implementation: `Sources/ConsoleCore/CopilotClient.swift` (AG-UI client,
+event parser, run accumulator), `Sources/ConsoleCore/JarvisClient.swift`
+and `CopilotHealth.swift` (read-only loopback probes),
+`Sources/M3taOSConsole/CopilotPanel.swift` (chat UI + runtime status).
 
-1. Install dependencies using your preferred package manager:
-
-```bash
-# Using npm (default)
-npm install
-
-# Using pnpm
-pnpm install
-
-# Using yarn
-yarn install
-
-# Using bun
-bun install
-```
-
-This also installs the agent dependencies via `npm install` inside `agent/`.
-
-2. Set up your environment variables:
+## Build
 
 ```bash
-cp .env.example .env
+swift build            # debug build
+swift test             # ConsoleCore unit tests
+./scripts/package.sh   # release build -> dist/M3taOSConsole.app (ad-hoc signed)
 ```
 
-Then edit the `.env` file and add your OpenAI API key:
-
-```bash
-OPENAI_API_KEY=your-openai-api-key-here
-```
-
-3. Start the development server:
-
-```bash
-# Using npm (default)
-npm run dev
-
-# Using pnpm
-pnpm dev
-
-# Using yarn
-yarn dev
-
-# Using bun
-bun run dev
-```
-
-This will start both the UI and agent servers concurrently.
-
-## Running a Channel
-
-`channel-host.mts` mounts the same agent as an Intelligence Channel
-(Slack, Teams). It requires `CPK_INTELLIGENCE_API_KEY` and a declared Channel in
-`.copilotkit/channels.json` — set both up with `copilotkit init` or
-`copilotkit channels add`, which write that file and the credentials your
-`.env` needs, then:
-
-```bash
-npm run channel
-```
-
-The host reads which Channel to hold from `.copilotkit/channels.json`. If a
-project declares more than one, set `INTELLIGENCE_CHANNEL_NAME` to pick one.
-
-The host holds no provider credentials and exposes no provider endpoint —
-Intelligence owns the provider edge — so the same file works for every provider.
-
-The Channel itself is declared in `channels.mts` — that is where to add commands,
-reactions, or an `onMention` handler. `channel-host.mts` only owns the process
-lifetime, and is byte-identical in every starter.
-
-Once startup finishes, the log reports the truth per Channel:
-
-- `Channel "<name>" is online.` — the session is up and can send.
-- `Channel "<name>" is declared but no provider is attached yet.` —
-  a normal waiting state, not a failure. Run `copilotkit channels status` to
-  see what setup remains.
-
-Neither message proves the provider app is installed, reachable, or that
-anyone can message it — verify that separately (invite the bot, then message
-it) before treating the Channel as working.
-
-## Available Scripts
-
-The following scripts can also be run using your preferred package manager:
-
-- `dev` - Starts both UI and agent servers in development mode
-- `dev:debug` - Starts development servers with debug logging enabled
-- `dev:ui` - Starts only the Next.js UI server
-- `dev:agent` - Starts only the LangGraph agent server
-- `build` - Builds the Next.js application for production
-- `start` - Starts the production server
-- `install:agent` - Installs agent (Node) dependencies
-- `channel` - Holds an Intelligence Channel open (see "Running a Channel" above)
-- `typecheck:channel` - Type-checks the channel host on its own `tsconfig.channel.json`
-
-## Project Structure
-
-```
-├── src/                         # Next.js frontend source
-│   ├── app/
-│   │   ├── page.tsx             # Main page
-│   │   └── api/copilotkit/      # CopilotKit API route
-│   ├── components/
-│   │   ├── example-canvas/      # Todo list UI
-│   │   ├── example-layout/      # Layout: chat + canvas side-by-side
-│   │   └── generative-ui/       # Example generative UI components
-│   └── hooks/
-├── agent/                       # LangGraph TypeScript agent
-│   ├── src/
-│   │   ├── agent.ts             # Agent entry point (createAgent)
-│   │   ├── todos.ts             # Todo tools and state schema
-│   │   ├── query.ts             # Example data query tool
-│   │   ├── a2ui.ts              # A2UI operation helpers
-│   │   ├── a2ui_fixed_schema.ts # Fixed-schema A2UI tool (flights)
-│   │   └── a2ui_dynamic_schema.ts # Dynamic-schema A2UI tool
-│   └── langgraph.json
-├── scripts/                     # Agent run scripts
-│   └── run-agent.sh / .bat
-├── public/                      # Static assets
-├── next.config.ts
-├── tsconfig.json
-└── package.json
-```
-
-## A2UI — Agent-to-User Interface
-
-This starter includes [A2UI](https://a2ui.org/specification/) support, allowing the agent to generate rich, interactive UI surfaces declaratively. Instead of returning plain text, the agent sends a JSON description of the UI it wants to render, and the frontend turns it into real components.
-
-### How it works
-
-A2UI uses three concepts:
-
-1. **Catalog** — a set of component definitions (schema) paired with React renderers. Registered once in `layout.tsx` via `<CopilotKitProvider a2ui={{ catalog: demonstrationCatalog }}>`.
-2. **Surface** — a rendered UI instance. The agent creates a surface, sets its components, and binds data to it.
-3. **Operations** — the agent returns `render(operations=[...])` from a tool, which the middleware streams to the frontend.
-
-### Two patterns
-
-| Pattern            | Description                                                                   | Agent tool       | Frontend                                    |
-| ------------------ | ----------------------------------------------------------------------------- | ---------------- | ------------------------------------------- |
-| **Fixed schema**   | Pre-defined component layout. Only the data changes per invocation.           | `search_flights` | Schema in `a2ui/schemas/flight_schema.json` |
-| **Dynamic schema** | A secondary LLM generates both components and data based on the conversation. | `generate_a2ui`  | Components decided at runtime               |
-
-Both patterns use the same catalog on the frontend — the difference is where the component tree comes from.
-
-### Key files
-
-| Purpose                              | Path                                               |
-| ------------------------------------ | -------------------------------------------------- |
-| Catalog definitions (Zod schemas)    | `src/app/declarative-generative-ui/definitions.ts` |
-| Catalog renderers (React components) | `src/app/declarative-generative-ui/renderers.tsx`  |
-| Catalog registration                 | `src/app/layout.tsx`                               |
-| Fixed-schema agent tool              | `agent/src/a2ui_fixed_schema.ts`                   |
-| Dynamic-schema agent tool            | `agent/src/a2ui_dynamic_schema.ts`                 |
-| Flight schema JSON                   | `agent/src/a2ui/schemas/flight_schema.json`        |
-| Showcase config                      | `showcase.json`                                    |
-
-### Adding a custom component
-
-1. **Define** the component schema in `definitions.ts`:
-
-   ```typescript
-   MyWidget: {
-     description: "A brief description for the agent.",
-     props: z.object({ title: z.string(), value: z.number() }),
-   },
-   ```
-
-2. **Render** it in `renderers.tsx`:
-
-   ```typescript
-   MyWidget: ({ props }) => (
-     <div>{props.title}: {props.value}</div>
-   ),
-   ```
-
-   Renderers are type-checked against the definitions — TypeScript will error if props don't match.
-
-3. **Use it** from the agent. The component is automatically available to both fixed-schema templates and the dynamic-schema LLM.
-
-### Adding a new fixed-schema tool
-
-1. Create a JSON schema file in `agent/src/a2ui/schemas/` describing the component tree.
-2. Create a TypeScript tool that loads the schema with `loadSchema()` and returns `render([...])` with your data. See `a2ui_fixed_schema.ts` for the pattern.
-
-### Showcase mode
-
-`showcase.json` controls which suggestion pills are visually highlighted. Set `"showcase": "a2ui"` to highlight the A2UI demos, or `"showcase": "default"` for no highlights. This is configured automatically when scaffolding via `npx copilotkit create --framework a2ui`.
-
-### Further reading
-
-- [A2UI Specification](https://a2ui.org/specification/)
-- [CopilotKit A2UI Documentation](https://docs.copilotkit.ai)
-
-## Documentation
-
-- [LangGraph Documentation](https://langchain-ai.github.io/langgraph/) - Learn more about LangGraph and its features
-- [CopilotKit Documentation](https://docs.copilotkit.ai) - Explore CopilotKit's capabilities
-
-## Contributing
-
-Feel free to submit issues and enhancement requests! This starter is designed to be easily extensible.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Troubleshooting
-
-### Agent Connection Issues
-
-If you see "I'm having trouble connecting to my tools", make sure:
-
-1. The LangGraph agent is running on port 8123
-2. Your OpenAI API key is set correctly
-3. Both servers started successfully
-
-### Agent Dependencies
-
-If you encounter agent import errors:
-
-```bash
-npm run install:agent
-```
-
-## CopilotKit Intelligence
-
-This app is connected to the CopilotKit Intelligence project **m3ta-os-console**
-(recorded in `../../.copilotkit/project.json`). Intelligence adds durable threads,
-message & event persistence, and analytics for your agent.
-
-- **Runtime credential:** a project-scoped key is stored as
-  `CPK_INTELLIGENCE_API_KEY` in your `.env`.
-- **Switch project:** run `copilotkit project select` from this directory.
-- **Run it:** follow "Getting Started" above — install dependencies, set your
-  keys in `.env`, then `npm run dev`.
-
-Learn more at https://docs.copilotkit.ai.
+Ports for the JARVIS endpoints are configurable in Settings (host is
+always 127.0.0.1; defaults 9782 agent-runtime, 9783 rea-mcp).
