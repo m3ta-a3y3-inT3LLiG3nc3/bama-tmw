@@ -44,3 +44,6 @@ Follow Matt Pocock's `writing-for-agents` rules:
    (`skills/start/bama/SKILL.md`).
 3. Run `claude plugin validate . --strict`.
 4. Keep `version` in `plugin.json` at 1.0.0 until the first release. After that, bump it, so installed copies update.
+
+## EGM design gate (M3ta, 2026-11-01)
+All design/spec work in M3ta-OS runs the Elephant-Goldfish Model (Google's EGM plugin, google/elephant-goldfish-model, installed fleet-wide 2026-11-01): an Elephant pass drafts the spec holding full project context and prior decisions; Goldfish passes — fresh, zero-context subagents — review the draft cold for unstated assumptions, unclear requirements, and implementation risks before any code; M3ta approves the trade-offs. Where the plugin is installed (Antigravity, Codex, Claude Code), use its skills: /egm:egm-brainstorm → concepts_brief.md, /egm:egm-draft → design_draft.md, /egm:egm-review (five stages), /egm:egm-resolve; egm-bootstrap documents an existing codebase, egm-drift-report compares docs to code. In environments without the plugin (e.g. the Muse runtime), run the same pattern natively: draft with full context, then spawn FRESH subagents that see only the draft plus its referenced sources for the goldfish review. Approved specs live under docs/designs/ in the repo. Small, clear bug fixes skip the gate and use the normal workflow.
