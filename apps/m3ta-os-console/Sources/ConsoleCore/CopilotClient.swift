@@ -149,13 +149,16 @@ public enum CopilotClient {
     /// POST one run to the CopilotKit runtime's agent route and stream its
     /// events. Throws `Failure.http` on a non-200 reply; transport errors
     /// propagate as-is (URLError etc.), which the panel renders as offline.
+    /// `agentId` selects the runtime agent ("default" is the chat agent;
+    /// EGMReviewClient passes "egm-goldfish" for cold reviews).
     public static func run(_ e: JarvisEndpoint = .fromDefaults(),
+                           agentId: String = "default",
                            threadId: String, messages: [CopilotMessage],
                            timeout: TimeInterval = 120) -> AsyncThrowingStream<CopilotEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    var req = URLRequest(url: e.copilotAgentRun(), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
+                    var req = URLRequest(url: e.copilotAgentRun(agentId), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
                     req.httpMethod = "POST"
                     req.setValue("application/json", forHTTPHeaderField: "content-type")
                     req.setValue("text/event-stream", forHTTPHeaderField: "accept")
