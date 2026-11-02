@@ -50,3 +50,21 @@ import Testing
         #expect(KenteTokens.all == [0xF2C230, 0x7A5600, 0x3FBF3A, 0x17702A, 0xF23A2E, 0x3E6E8E, 0x5CFF4A, 0xFFD447])
     }
 }
+
+@Suite struct DashboardThemeTests {
+    @Test func kitValuesMatchBrandKit() {
+        #expect(DashboardTokens.kitBg == 0x0A0A0C)
+        #expect(DashboardTokens.kitSurface == 0x121214)
+        #expect(DashboardTokens.kitGold == 0xC9A227)
+        #expect(DashboardTokens.kitGoldAccent == 0xE6C65C)
+        #expect(DashboardTokens.standard.accent == DashboardTokens.kitGold)
+        #expect(DashboardTokens.standard.bg == DashboardTokens.kitBg)
+    }
+    // Spec acceptance test 6, ThemeTests style: every text pair the
+    // dashboard introduces passes WCAG AA.
+    @Test func dashboardPairsPassAA() {
+        for (n, a, b) in DashboardTokens.standard.textPairs {
+            #expect(M3taTokens.contrast(a, b) >= 4.5, "dashboard \(n)")
+        }
+    }
+}
