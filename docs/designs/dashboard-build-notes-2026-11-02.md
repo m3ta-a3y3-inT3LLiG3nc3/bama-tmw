@@ -110,3 +110,52 @@ Run on the Mac, in the bama-tmw checkout, after pulling this branch:
    the packaged Meta OS app (M3ta's session), run the two-review
    statelessness check, and one real review run. The dashboard does
    not depend on any of it; its EGM row stays blocked until then.
+
+## Correction note, 2026-11-02 (logo mark)
+
+M3ta flagged that a logo mark he was shown read as "two Ms side by side."
+That reading is wrong for this brand. The only correct mark is the
+ratified brand-kit master: ONE single continuous wave-line M inside a
+gold ring (master SVG:
+`th3-m3ta-way/svg/th3-m3ta-way-badge-circle.svg`, viewBox 240, ring r108
+stroke 12 in #C9A227, one wave path, round caps and joins).
+
+What this build bundled before this note, verified 2026-11-02:
+
+- `apps/m3ta-os-console/Resources/brand/th3-m3ta-way-badge-circle-1080px.png`
+  byte-matches the brand kit's own 1080px export
+  (md5 a6fc30521df6fd2de71f9f95835eb536 on both copies). A visual read of
+  the PNG confirms the single wave-line M in the gold ring. Faithful.
+- `apps/m3ta-os-console/Resources/brand/th3-m3ta-way-badge-circle.svg`
+  is byte-identical to the master SVG (diff clean). Faithful.
+- The drawn fallback in `BrandBadgeImage` (a system cube glyph on a
+  rounded rectangle) renders only when the bundled asset is missing,
+  for example dev runs via `swift run`. It is a placeholder, never the
+  mark, and its accessibility label says so.
+
+Added by this correction:
+
+- `apps/m3ta-os-console/Resources/brand/th3-m3ta-way-badge-circle-3d-1600px.png`,
+  a byte-exact copy of the brand kit's 3D gold medallion render
+  (md5 7e5ad06170e3220ca4cfa3c3aa7b17c9 on both copies; kit file dated
+  2026-10-31, the newest badge render on record). Visual read confirms
+  the same single wave-line M, extruded in brushed gold inside the gold
+  ring on black.
+- Intended use: hero medallion presentation. Neither the dashboard
+  spec, its addenda, nor the current code defines a medallion slot; the
+  hero (`DashboardView.heroPanel`) uses `BrandBadgeImage` with the flat
+  1080px badge at the spec's asset path, unchanged. The medallion ships
+  bundled and ready; wiring it into the hero needs a spec slot first,
+  so no UI changed in this correction.
+- Packaging: `scripts/package.sh` copies the whole `Resources/brand`
+  directory into the app (`cp -R Resources/brand`), so the medallion
+  reaches the packaged app with no script change. Add it to the Mac
+  run sheet asset check above: the packaged app should also contain
+  `Contents/Resources/brand/th3-m3ta-way-badge-circle-3d-1600px.png`,
+  byte-matching the brand-kit file (`cmp`).
+
+Rule, standing: never redraw, redesign, or approximate the mark. Only
+the brand-kit masters and their own renders ship. Any surface that
+needs the logo takes a byte-exact copy from
+`~/workspace/m3ta-g3ar/brand-kit/th3-m3ta-way/` and verifies it with a
+checksum or `cmp` before it is called done.
