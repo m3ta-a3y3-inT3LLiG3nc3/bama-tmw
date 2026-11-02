@@ -85,7 +85,8 @@ struct CopilotChatView: View {
     }
 
     private var chat: some View {
-        VStack(spacing: 0) {
+        @Bindable var model = model
+        return VStack(spacing: 0) {
             Text("Copilot · JARVIS runtime 127.0.0.1:\(String(model.port)) · local models first · actions that send, spend, or delete are held by the JEV approval gate")
                 .font(.caption).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading).padding(10)
