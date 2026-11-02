@@ -8,6 +8,7 @@ APP=dist/M3taOSConsole.app
 rm -rf "$APP"; mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/M3taOSConsole" "$APP/Contents/MacOS/"
 cp -R "$BIN/M3taOSConsole_ConsoleCore.bundle" "$APP/Contents/Resources/"
+cp -R Resources/brand "$APP/Contents/Resources/brand"
 cp Resources/theme/icons/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cat > "$APP/Contents/Info.plist" <<P
 <?xml version="1.0" encoding="UTF-8"?>

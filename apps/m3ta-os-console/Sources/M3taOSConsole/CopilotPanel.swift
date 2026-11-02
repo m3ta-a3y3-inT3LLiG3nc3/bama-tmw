@@ -25,8 +25,12 @@ struct CopilotPanelView: View {
     }
 }
 
+/// App-level chat run store (lifted from a CopilotChatView-owned model
+/// per the dashboard spec, Panel 2): the dashboard's voice presence orb
+/// reads the same run state the chat screen drives. Injected in the
+/// environment at the app root; chat behavior is unchanged.
 @MainActor @Observable
-final class CopilotChatModel {
+final class ChatRunStore {
     var connection: CopilotHealth.Result?
     var acc = CopilotRunAccumulator()
     var input = ""
@@ -60,7 +64,7 @@ final class CopilotChatModel {
 }
 
 struct CopilotChatView: View {
-    @State private var model = CopilotChatModel()
+    @Environment(ChatRunStore.self) private var model
     var body: some View {
         Group {
             switch model.connection {

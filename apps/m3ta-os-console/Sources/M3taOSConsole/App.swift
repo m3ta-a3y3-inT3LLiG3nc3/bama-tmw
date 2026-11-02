@@ -21,30 +21,59 @@ final class Store {
     }
 }
 
+/// Owns the loaded DashboardState (dashboard spec, data contract).
+/// Deliberate deviation from BotStore: when a Settings override path is
+/// set and fails, the error shows and no bundled fixture is substituted,
+/// because falling back to a stale fixture while claiming freshness is
+/// the failure the dashboard design exists to prevent.
+@MainActor @Observable
+final class DashboardStore {
+    var state: DashboardState?
+    var error: String?
+    var sourcePath: String?
+    init() { refresh() }
+    func refresh() {
+        do {
+            if let p = UserDefaults.standard.string(forKey: "dashboardStatePath"), !p.isEmpty {
+                state = try DashboardStateLoader.load(from: URL(fileURLWithPath: (p as NSString).expandingTildeInPath)); sourcePath = p
+            } else {
+                state = try DashboardStateLoader.loadBundled(); sourcePath = "bundled fixture"
+            }
+            error = nil
+        } catch { state = nil; self.error = "Could not load DashboardState: \(error.localizedDescription)" }
+    }
+}
+
 enum Screen: String, CaseIterable, Identifiable {
-    case overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case dashboard = "Dashboard", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
-    var story: String { switch self { case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Command", [.dashboard]), ("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
+    var story: String { switch self { case .dashboard: "M3-DASH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .dashboard: "gauge"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
 }
 
 @main
 struct M3taOSConsoleApp: App {
     @State private var store = Store()
     @State private var bots = BotStore()
+    @State private var dashboard = DashboardStore()
+    @State private var chatRuns = ChatRunStore()
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
-        Settings { SettingsView().environment(store).environment(bots) }
+        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).environment(dashboard).environment(chatRuns).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        Settings { SettingsView().environment(store).environment(bots).environment(dashboard) }
     }
 }
 
 struct RootView: View {
     @Environment(Store.self) var store
     @Environment(BotStore.self) var bots
-    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .overview
+    @Environment(DashboardStore.self) var dashboard
+    // Dashboard is the launch default (M3ta's resolve call, 2026-11-02:
+    // the central command center). CONSOLE_SCREEN still selects a screen
+    // for scripted launches, including "Overview".
+    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .dashboard
     var body: some View {
         NavigationSplitView {
             List(selection: $sel) {
@@ -55,9 +84,18 @@ struct RootView: View {
             }
             .navigationSplitViewColumnWidth(min: 190, ideal: 220)
         } detail: {
-            if let st = store.state {
+            // The Dashboard is NOT gated on MeshState (spec, Root view
+            // gating change): it renders from DashboardState plus the
+            // loopback probes whatever MeshState did, and a DashboardState
+            // failure never blocks the other screens.
+            if (sel ?? .dashboard) == .dashboard {
+                DashboardView { s in sel = s }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
+            } else if let st = store.state {
                 Group {
                     switch sel ?? .overview {
+                    case .dashboard: DashboardView { s in sel = s }
                     case .overview: OverviewView()
                     case .status: StatusView(s: st)
                     case .pairing: PairingView(s: st)
@@ -75,7 +113,7 @@ struct RootView: View {
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
         .background(Color.tmwBg)
-        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
+        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); dashboard.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
     }
 }
 
@@ -201,8 +239,10 @@ struct MeshView: View {
 struct SettingsView: View {
     @Environment(Store.self) var store
     @Environment(BotStore.self) var bots
+    @Environment(DashboardStore.self) var dashboard
     @AppStorage("meshStatePath") private var path = ""
     @AppStorage("botMapPath") private var botPath = ""
+    @AppStorage("dashboardStatePath") private var dashPath = ""
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     @AppStorage("jarvisRuntimePort") private var runtimePort = 9782
     @AppStorage("jarvisReaPort") private var reaPort = 9783
@@ -220,7 +260,9 @@ struct SettingsView: View {
             Picker("Appearance", selection: $appearance) { ForEach(Appearance.allCases) { Text($0.rawValue).tag($0.rawValue) } }
             TextField("Bot map JSON path (empty = bundled copy)", text: $botPath)
             Text("Bot map from: \(bots.sourcePath)").font(.caption)
-            Button("Reload") { store.refresh(); bots.refresh() }
+            TextField("Dashboard state JSON path (empty = bundled fixture)", text: $dashPath)
+            Text("Loaded from: \(dashboard.sourcePath ?? "none")").font(.caption)
+            Button("Reload") { store.refresh(); bots.refresh(); dashboard.refresh() }
             Text("No secrets are stored. JARVIS checks are read-only GETs on loopback; the console never starts JARVIS.").font(.caption).foregroundStyle(.secondary)
         }.padding().frame(width: 460)
     }

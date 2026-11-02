@@ -133,7 +133,16 @@ struct BrainView: View {
                 }
             }
             Spacer(minLength: 0)
-        }.padding().task { await check() }
+        }.padding().task {
+            await check()
+            // Dashboard Panel 7 routes here with its query carried over
+            // (the dashboard grows no second search implementation).
+            if let pending = UserDefaults.standard.string(forKey: "brainPendingQuery"), !pending.isEmpty {
+                UserDefaults.standard.removeObject(forKey: "brainPendingQuery")
+                q = pending
+                await run()
+            }
+        }
     }
     func check() async { status = nil; status = await BrainClient.status() }
     func run() async { busy = true; outcome = await BrainClient.search(q); busy = false }

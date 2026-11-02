@@ -121,3 +121,66 @@ struct KenteStripe: View {
             .frame(height: 4).accessibilityHidden(true)
     }
 }
+
+// MARK: - Dashboard (system 1: updated Th3 M3ta Way brand kit)
+
+extension Color {
+    /// Fixed system-1 dashboard palette (gold on deep black). The brand
+    /// kit defines a dark system only, so the dashboard renders these
+    /// tokens in both appearances rather than inventing a light variant.
+    static func dash(_ k: KeyPath<DashboardTokens.Palette, Int>) -> Color { Color(hex: DashboardTokens.standard[keyPath: k]) }
+    static let dashBg = dash(\.bg), dashSurface = dash(\.surface), dashLine = dash(\.line),
+               dashText = dash(\.text), dashMuted = dash(\.textMuted), dashAccent = dash(\.accent),
+               dashAccent2 = dash(\.accent2), dashLink = dash(\.link), dashGlow = dash(\.glow)
+    static func dashSlot(_ s: DashboardStatus) -> Color { Color(hex: s.slotHex) }
+}
+
+/// One labeled status capsule. The optional block label prefixes the
+/// status word ("Count: live"); a panel carries one capsule per source
+/// block and never averages two states into one word.
+struct DashboardCapsule: View {
+    let label: String?
+    let status: DashboardStatus
+    var body: some View {
+        Text((label.map { "\($0): " } ?? "") + status.word)
+            .font(.caption.monospaced().weight(.medium))
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(Color.dashSlot(status).opacity(0.18), in: .capsule)
+            .foregroundStyle(Color.dashSlot(status))
+            .accessibilityLabel("Status: \((label.map { "\($0) " } ?? ""))\(status.word)")
+    }
+}
+
+/// The dashboard's panel frame (spec, Frames): existing card language at
+/// variable height, 14pt radius, glass effect, accent edge. Header:
+/// name left, capsules right, source line under the name, never hidden.
+struct DashboardPanel<Content: View>: View {
+    let title: String
+    let capsules: [(String?, DashboardStatus)]
+    let sourceLine: String
+    var linkLabel: String? = nil
+    var linkAction: (() -> Void)? = nil
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
+            HStack(alignment: .top, spacing: M3taTokens.Spacing.s) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.headline).foregroundStyle(Color.dashText)
+                    Text(sourceLine).font(.caption).foregroundStyle(Color.dashMuted).lineLimit(2)
+                }
+                Spacer()
+                HStack(spacing: 4) { ForEach(Array(capsules.enumerated()), id: \.offset) { _, c in DashboardCapsule(label: c.0, status: c.1) } }
+            }
+            content()
+            if let linkLabel, let linkAction {
+                Button(linkLabel) { linkAction() }.buttonStyle(.link).font(.callout)
+            }
+        }
+        .padding(M3taTokens.Spacing.l)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .background(Color.dashSurface.opacity(0.92), in: .rect(cornerRadius: M3taTokens.Radius.tile))
+        .glassEffect(.regular, in: .rect(cornerRadius: M3taTokens.Radius.tile))
+        .overlay(alignment: .leading) { UnevenRoundedRectangle(topLeadingRadius: M3taTokens.Radius.tile, bottomLeadingRadius: M3taTokens.Radius.tile).fill(Color.dashAccent).frame(width: 3).accessibilityHidden(true) }
+        .accessibilityElement(children: .contain)
+    }
+}
