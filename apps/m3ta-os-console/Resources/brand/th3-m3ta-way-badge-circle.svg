@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="Th3 M3ta Way circular badge">
+  <!-- CIRCULAR BADGE: clean corporate, gold path-M in a gold ring. No cosmic styling.
+       The path is the same geometry as th3-m3ta-way-path-mark.svg, scaled to fit. -->
+  <circle id="ring" cx="120" cy="120" r="108" fill="none" stroke="#C9A227" stroke-width="12"/>
+  <g transform="translate(20,55) scale(0.5)">
+    <path id="path-m-mini"
+          d="M49,180 C100,176 104,118 121,100 C133,86 152,87 160,106 C174,140 184,162 199,163 C214,162 224,140 238,106 C246,87 265,86 277,100 C294,118 298,176 354,180"
+          fill="none" stroke="#C9A227" stroke-width="20" vector-effect="non-scaling-stroke"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
