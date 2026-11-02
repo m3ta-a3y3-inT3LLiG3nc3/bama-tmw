@@ -1,7 +1,8 @@
 # The M3ta Way dashboard for the M3ta-OS Console
 
-Status: Elephant draft, 2026-11-02. For Goldfish review, then M3ta's
-resolve step. Nothing in this spec is built yet unless a section says so.
+Status: revised after Goldfish review, 2026-11-02 (17 findings
+resolved; see the resolution note at the end). For M3ta's resolve step.
+Nothing in this spec is built yet unless a section says so.
 Scope: one new screen in the M3ta-OS Console app (this repo,
 apps/m3ta-os-console), plus the snapshot data it renders. No new runtime,
 no new server, no Mac-side work in the MVP.
@@ -23,9 +24,9 @@ Mac harness and launcher, Orbit is the cloud record.
 | --- | --- |
 | Panel | One bounded region of the dashboard screen, with one job, one data source, and one status. |
 | Snapshot | A JSON state file captured by a producer outside the Console, loaded by the app the way `MeshState` and `BotMap` load today: a path override in Settings, else a bundled copy. |
-| Status vocabulary | `live` (a feed the Console reads now), `snapshot` (rendered from a snapshot file, age shown), `designed` (specced here, no feed and no code yet), `blocked` (a named decision or endpoint is missing). Every panel carries exactly one of these, on screen. |
+| Status vocabulary | `live` (a feed the Console reads now), `snapshot` (rendered from a snapshot file, age shown), `designed` (specced here, no feed and no code yet), `blocked` (a named decision or endpoint is missing). Every source block on the dashboard carries one of these, on screen, as a labeled capsule in its panel header (see Frames). A panel with one source carries one capsule; a panel with two sources carries two, each capsule prefixed with its block name. No panel ever averages two states into one word. |
 | Action levels | L0 observe, L1 prepare/draft, L2 reversible internal execution, L3 explicit approval (sends, publishes, purchases, deploys, deletions), L4 never without direct instruction (money movement, signatures, secrets, security overrides). Per the action-card skill. The dashboard itself performs L0 only in the MVP. |
-| Hero | The top frame of the Today screen: brand badge, greeting line, the day's brief, and the voice presence. One hero per screen, per the theme rule in tokens.json. |
+| Hero | The top frame of the Today screen: brand badge, greeting line, the day's brief, and the voice presence. One hero per screen is this spec's own rule. (tokens.json has no hero-count rule; its nearest rule is "nebula gradient = hero/glow only, max one per surface", which the Motion section applies to the badge glow.) |
 
 ## Current state (scoped to its evidence)
 
@@ -33,9 +34,12 @@ Checked in this repo, 2026-11-02:
 
 - Screens today (`App.swift`): Overview, Pluto status, Pairing, Pairing
   result, Mesh, Bots, Brain, Copilot. There is no dashboard or Today
-  screen. Overview is a status-card grid over a snapshot plus two
-  read-only loopback checks, and it is the closest existing relative of
-  this design.
+  screen. Overview is a status-card grid over a snapshot plus three
+  read-only loopback checks, run in `OverviewView`'s task:
+  `CopilotHealth.check()`, `BrainClient.status()`, and
+  `ModelRoute.fetch()`. It is the closest existing relative of this
+  design, and Definition of done item 2 builds the dashboard's allowed
+  on-open read set from exactly this inventory.
 - Live reads that exist in ConsoleCore: JARVIS health, model route, and
   REA skills via `JarvisClient` (127.0.0.1:9782 and :9783, read-only
   GETs); Copilot health via `CopilotHealth`; brain status and search via
@@ -57,11 +61,14 @@ Checked in this repo, 2026-11-02:
   agent, `egm-goldfish`, is not registered on the Mac yet, so the step
   is not live. This spec does not depend on it.
 - Brand, and a conflict this spec does not hide: three token systems
-  are on record. (1) The dashboard brief from M3ta, 2026-11-02: gold
-  #C9A227 on black #0a0a0c / #121214, accent #e6c65c, matching the
-  Digital HQ surface and the ratified Th3 M3ta Way badge (brand-kit
-  spec, ~/workspace/m3ta-g3ar/brand-kit/spec.md: the badge stays
-  unchanged). (2) The in-repo theme, Resources/theme/tokens.json,
+  are on record. (1) The dashboard brief from M3ta, 2026-11-02 (this
+  spec's commissioning request): gold #C9A227 on black #0a0a0c /
+  #121214, accent #e6c65c. The same four hexes are verified in the
+  shipped Digital HQ surface,
+  ~/workspace/goals/m3ta-0s-linkstack-digital-hq-rebuild/files/digital-hq/index.html,
+  and gold #C9A227 with the badge is the ratified standard in the
+  brand-kit spec, ~/workspace/m3ta-g3ar/brand-kit/spec.md (the badge
+  stays unchanged). (2) The in-repo theme, Resources/theme/tokens.json,
   "TMW Cosmic Lightbody v1", marked CONFIRMED direction 2026-10-27:
   onyx #0E0A12, cosmic red #F0505A, violet #B48CF2, no gold primary.
   (3) `Theme.swift` house tokens traced to the disk brand kits: navy
@@ -77,12 +84,18 @@ Checked in this repo, 2026-11-02:
   are out of scope here (knowledge front end, client builds).
 - Revenue facts allowed on screen, and their sources: the offer ladder
   as ruled by M3ta (Snapshot $333.33, Assessment $5,555.55, Company
-  Brain $11,111.11, AaaS $1,111.11/mo); public selling gated on WS-06
-  copy approval plus live Stripe (Stripe is test-mode today); verified
-  empire revenue is $0 (empire audit, 2026-11-01). No other revenue
-  number exists to display. There is no commission ledger yet (gap G7
-  in the revenue engine template), so no per-offer or per-channel money
-  breakdown exists to chart.
+  Brain $11,111.11, AaaS $1,111.11/mo), recorded in
+  ~/workspace/goals/m3ta-command-center/files/m3ta-way-operating-blueprint-2026-11-02.md
+  (client lane) and
+  ~/workspace/goals/ai-content-engine-that-promotes-everything-and-grows-income/files/full-stack-invocation-map-2026-11-02.md;
+  public selling gated on WS-06 copy approval plus live Stripe
+  (Stripe is test-mode today), same sources; verified empire revenue
+  is $0 (empire audit, 2026-11-01, recorded in
+  ~/workspace/goals/ai-content-engine-that-promotes-everything-and-grows-income/files/compile-command-center-tiktok-affiliate-2026-11-02.md).
+  No other revenue number exists to display. There is no commission
+  ledger yet (gap G7 in
+  ~/workspace/goals/ai-content-engine-that-promotes-everything-and-grows-income/files/revenue-engine-os-template-2026-11-02.md),
+  so no per-offer or per-channel money breakdown exists to chart.
 - Skills Brain: a spec exists, its Phase 1 is blocked on M3ta's
   registry-of-record ruling. The REA skills list JARVIS exposes
   (/api/rea/skills, tools exposed count in `JarvisLiveView`) is a
@@ -103,8 +116,12 @@ Checked in this repo, 2026-11-02:
 2. Opening the dashboard triggers no external collection: no mail, web,
    tracker, or cloud calls. It renders the loaded snapshot immediately.
    The only network traffic allowed on open is the loopback read set
-   the Console already performs (JARVIS health, models, REA skills,
-   brain status), each labeled with its checked-at time.
+   the Console already performs, named exactly: `CopilotHealth.check()`,
+   `BrainClient.status()`, `ModelRoute.fetch()` (the three Overview
+   probes), plus the `JarvisClient` health and REA skills reads and the
+   rea-mcp health probe that carries the approvals pending count (the
+   reads `JarvisLiveView` already makes). Each is labeled with its
+   checked-at time.
 3. No number appears on any panel unless it traces to a named source
    named on that panel. Unknown renders as "Unknown", never as zero,
    following the app's existing rule ("Never guessed; unknown stays
@@ -125,43 +142,85 @@ Checked in this repo, 2026-11-02:
 ### Shell and layout
 
 - One new screen, `Dashboard`, added to the sidebar under a new group
-  "Command" placed above "Home", and made the default selection on
-  launch (today Overview is the default). Existing screens do not move
-  or change behavior. `CONSOLE_SCREEN` keeps working; a new value,
-  "Dashboard", selects the new screen for scripted launches.
+  "Command" placed above "Home". Whether Dashboard becomes the default
+  selection on launch (today Overview is the default) is Open question
+  2, decided at M3ta's resolve step; the build implements whichever
+  the resolve step records, and nothing in this spec pre-empts it.
+  Existing screens do not move or change behavior. `CONSOLE_SCREEN`
+  keeps working; a new value, "Dashboard", selects the new screen for
+  scripted launches.
+- Root view gating change, required by the reliability floor: today
+  `RootView` renders no screen at all when `MeshState` fails to load
+  (it shows `ContentUnavailableView("No state")`). The Dashboard must
+  not be gated on `MeshState`. When Dashboard is selected, it renders
+  from `DashboardState` plus the loopback probes regardless of
+  `MeshState` state; if `MeshState` failed, the Mesh-derived screens
+  keep today's "No state" behavior and the sidebar stays usable so
+  M3ta can navigate. The reverse case is symmetric: a `DashboardState`
+  failure never blocks the existing screens, which do not read it.
 - Layout, top to bottom, one scrolling column at the app's current
   minimum window (960x640) and wider:
   1. Hero frame (Panel 1 fused with Panel 2's presence orb).
   2. Approvals strip (Panel 3), full width, directly under the hero,
      because it is the one panel that asks M3ta to act.
-  3. A two-column grid below: Command surfaces (Panel 4) and Revenue
-     engine (Panel 5) side by side, then Skills Brain (Panel 6) and
-     Knowledge brain (Panel 7) side by side. Below the app's current
-     adaptive-grid minimum the columns stack, in the same order.
-- Frames: panels reuse the existing card language (the `StatusCard`
-  tile: 14pt radius, glass effect, 150pt min height is Overview's;
-  dashboard panels are variable height and do not inherit the fixed
-  height). Each panel has a header row: panel name, status word as a
-  capsule in the `StatusTag` style, and a source line in caption size.
-  No panel hides its source line in a tooltip or a detail view.
-- Navigation out: panels route, they do not duplicate. Tapping a panel
-  header's link control selects the existing screen that owns the
-  detail (Copilot, Brain, Bots, Mesh) or opens the external surface
-  (Otto, Orbit, Paperclip, Plane, Linear) in the browser. Link controls
+  3. A fixed two-column grid below (two flexible `GridItem`s, not the
+     adaptive grid Overview uses): Command surfaces (Panel 4) and
+     Revenue engine (Panel 5) side by side, then Skills Brain
+     (Panel 6) and Knowledge brain (Panel 7) side by side. When the
+     detail column is narrower than 720pt the grid collapses to one
+     column, panels in the same order. The hero and the approvals
+     strip span full width in both modes.
+- Frames: one new component, `DashboardPanel` in Design.swift, carries
+  the existing card language at variable height: 14pt radius, glass
+  effect, the kente accent edge `StatusCard` uses. (`StatusCard`
+  itself is not reused: it takes only title, value, detail, and icon
+  and fixes its height at 150pt, so it cannot render a panel.)
+  `DashboardPanel` takes a title, one or two status capsules, a source
+  line, an optional link control, and a content closure. Header layout:
+  panel name left, capsules right, source line under the name in
+  caption size. No panel hides its source line in a tooltip or a
+  detail view. Existing screens and `StatusStyle` are unchanged; the
+  dashboard uses its own status enum, `DashboardStatus`, mapped to
+  colors as follows (capsule fill at 18 percent opacity, in the
+  `StatusTag` manner):
+
+  | Vocabulary word | Color source |
+  | --- | --- |
+  | `live` | The chosen system's success token (`StatusTokens.good` under system 2) |
+  | `snapshot` | The chosen system's second accent (`TMWTokens` accent2 under system 2) |
+  | `designed` | The chosen system's alert token (`StatusTokens.warn` under system 2) |
+  | `blocked` | The chosen system's bad token (`StatusTokens.bad` under system 2) |
+
+  Under systems 1 and 3 the same four semantic slots are filled by
+  that system's tokens once its token-completion step (Brand
+  application) is done; the mapping is by slot, never by brand accent.
+- Navigation out: panels route, they do not duplicate. Link controls
   are real controls with labels, not whole-card click targets, so
-  VoiceOver and keyboard users get the same routes.
+  VoiceOver and keyboard users get the same routes. Routing table:
+
+  | Panel / row | Target |
+  | --- | --- |
+  | Panel 1 (Today) | No outbound link; it is the summary. |
+  | Panel 2 (Voice) | Internal: the Copilot screen. |
+  | Panel 3 (Approvals) | Internal: the Copilot screen, Runtime status tab (where the pending count already renders). |
+  | Panel 4, JARVIS row | Internal: the Copilot screen, Runtime status tab. |
+  | Panel 4, Otto row | No link in the MVP (no URL and no Console feed exist; the row states the blocker). |
+  | Panel 4, Orbit / Paperclip / Plane / Linear rows | External: the row's `routeURL` from the snapshot, opened in the browser. No URL is hard-coded in the app; when `routeURL` is absent, no link control renders. |
+  | Panel 5 (Revenue) | No outbound link in the MVP. |
+  | Panel 6 (Skills Brain) | REA block: internal, the Copilot screen, Runtime status tab. Registry block: no link. |
+  | Panel 7 (Knowledge) | Internal: the Brain screen, with the search query carried over. |
 
 ### Panel 1: Today / hero brief
 
 - Job: the day at a glance, Wolfe pattern A3. The brief is a ranking of
   what is already saved, never a collection run.
 - Content, deterministic-first (pattern A5): (a) date and greeting
-  line; (b) up to five brief lines, ranked by a fixed rule order:
-  approvals waiting first, then calendar items inside 24 hours, then
-  blocked or stale items from the snapshot, then one knowledge line
-  (queue state), then one revenue line (gate state, not money). Each
-  line carries its source tag. If a source is absent from the snapshot,
-  its slot is omitted, not filled.
+  line; (b) brief lines built by one fixed pipeline: take the
+  snapshot's `briefLines`, re-rank by kind in the order approval,
+  calendar, blocked, knowledge, revenue; omit kinds that are absent
+  (no empty slots); then take the first five. Calendar content arrives
+  only as `briefLines` entries with kind `calendar`; there is no
+  separate calendar field. Each line carries its source tag.
 - Data source: `DashboardState` snapshot (below). Calendar content
   enters only through the snapshot; the Console gains no calendar
   access of its own in the MVP.
@@ -183,20 +242,31 @@ Checked in this repo, 2026-11-02:
   wired into the Console or JARVIS today: no speech recognition, no
   speech synthesis, no wake word, no avatar feed exists in this repo.
 - MVP design: a presence orb in the hero. Its states map one to one to
-  real run states from the existing accumulator: idle, listening is
-  NOT a state (there is no microphone), working (a chat run is
-  streaming), speaking is NOT a state (there is no speech output),
-  offline (runtime unreachable). The orb animates only in `working`,
-  driven by arriving stream events, so the motion is evidence, not
-  decoration. Beside the orb, one line states the truth in words:
-  "Voice: text chat live. Speech in and out: designed, not wired."
-  A button routes to the Copilot screen.
+  real run states: idle, listening is NOT a state (there is no
+  microphone), working (a chat run is streaming), speaking is NOT a
+  state (there is no speech output), offline (runtime unreachable).
+  The orb animates only in `working`, driven by arriving stream
+  events, so the motion is evidence, not decoration. Beside the orb,
+  one line states the truth in words: "Voice: text chat live. Speech
+  in and out: designed, not wired." A button routes to the Copilot
+  screen.
+- Shared state, required for the orb to work at all: today the chat
+  run state lives in `CopilotChatModel`, held as `@State` inside
+  `CopilotChatView`, which a separate screen cannot observe. The build
+  lifts that model to an app-level observable (working name
+  `ChatRunStore`) injected in the environment next to `Store` and
+  `BotStore`; `CopilotChatView` consumes it instead of owning it, with
+  no behavior change to chat. The dashboard reads `isRunning` and the
+  connection state from it. When the Copilot screen has never been
+  opened in this launch, the orb shows idle if the runtime probe is
+  online and offline if it is not; it never claims a run state it has
+  not observed.
 - Designed, not in MVP: microphone input, spoken replies, and an
   animated speaking avatar. Each needs its own spec and its own
   decisions (speech engine local vs cloud, where audio is processed,
   what leaves the machine). This spec does not pick them.
-- Status: `designed` for speech; the orb and its working state are
-  `live` once built, fed by the chat run state.
+- Status: two capsules: "Presence: live" (the orb, fed by the shared
+  chat run state) and "Speech: designed".
 
 ### Panel 3: Approvals queue (Jev-gated)
 
@@ -221,7 +291,7 @@ Checked in this repo, 2026-11-02:
   fires only on M3ta's explicit approval of that card. The dashboard
   never batches approvals and never pre-approves. Denied cards are
   final and are logged as denied.
-- Status: count `live`, list `blocked`.
+- Status: two capsules: "Count: live" and "Queue detail: blocked".
 
 ### Panel 4: Command surfaces
 
@@ -231,12 +301,14 @@ Checked in this repo, 2026-11-02:
 - Rows and truth:
   - JARVIS: `live`. Health, default model route, paid-model count from
     the probes the app already makes (the Models card data).
-  - Orbit: `snapshot`. The Console has no Orbit feed. Bot-map counts
-    (Orbit agents at map time) exist in `BotMap`; anything fresher
-    needs a snapshot producer. Known operational facts that belong in
-    the snapshot, with dates, not as live claims: quota state, plan
-    renewal. The panel shows the snapshot's words and date, nothing
-    fresher-looking.
+  - Orbit: `snapshot`. The Console has no Orbit feed. This row reads
+    `DashboardState` only; it does not read `BotStore`/`BotMap` (the
+    bot map's Orbit agent count lives on the Bots screen and is a
+    different snapshot with a different date). Counts render only
+    from the row's `count` and `countAsOf` fields. Known operational
+    facts that belong in the snapshot, with dates, not as live claims:
+    quota state, plan renewal. The panel shows the snapshot's words
+    and date, nothing fresher-looking.
   - Otto: `blocked` for control, `snapshot` for presence. Otto control
     waits on M3ta's in-app scoped grant; the Console has no Otto feed
     at all. The row says so and routes out; it does not show a status
@@ -244,9 +316,9 @@ Checked in this repo, 2026-11-02:
     not by this app today, so it renders "Unknown".
   - Paperclip: `snapshot`. Per-box boards are snapshots by design, not
     sync. The row shows board identity and snapshot age from
-    `DashboardState`; no counts the snapshot does not carry.
+    `DashboardState`; counts only from `count`/`countAsOf`.
   - Plane: `snapshot`. Delivery layer; project and issue counts only
-    as of the snapshot that carries them, with its date.
+    from `count`/`countAsOf`, with the date on screen.
   - Linear: `snapshot`. Same rule.
 - Deterministic-first ranking (pattern A5): rows sort blocked first,
   then stale (snapshot older than 24 hours), then live. No model
@@ -285,18 +357,17 @@ Checked in this repo, 2026-11-02:
   the REA tool list.
 - Content, two blocks that never merge:
   1. REA skills (from JARVIS): `live`. Tools exposed count and the
-     first names, from /api/rea/skills, the same data `JarvisLiveView`
-     renders. Labeled "JARVIS REA skills, not the Skills Brain
-     registry."
+     first 12 tool names, from /api/rea/skills, matching exactly what
+     `JarvisLiveView` renders today (count plus `prefix(12)` names
+     with an ellipsis beyond 12). Labeled "JARVIS REA skills, not the
+     Skills Brain registry."
   2. Skills Brain registry: `blocked`. One line, the blocker in words:
      "Phase 1 waits on the registry-of-record ruling." Below it, what
      the registry will hold when it exists (skill name, owner surface,
      version, where it is wired), as a designed schema sketch, clearly
      marked designed.
-- Status: mixed by block, each block labeled separately. A single
-  panel-level status would lie about one of the two, so this panel is
-  the one exception to the one-status-per-panel rule, and it says so
-  on screen ("Two sources, two states").
+- Status: two capsules: "REA skills: live" and "Registry: blocked",
+  under the header note "Two sources, two states".
 
 ### Panel 7: Knowledge brain
 
@@ -309,10 +380,11 @@ Checked in this repo, 2026-11-02:
   hub built (2026-11-01), vault mirror job not running, OpenKnowledge
   corpus import not done (the structural gap), Console Knowledge
   module specced, not built (specs/m3ta-os-console-knowledge.md).
-- Ingest queue counts appear only if the snapshot carries them with a
-  date. The dashboard does not read Notion directly; no Notion feed
+- Ingest queue counts appear only from the contract's `queueCounts`
+  field (waiting, in-pipeline, failed, each with the field's `asOf`
+  date). The dashboard does not read Notion directly; no Notion feed
   exists in the Console and the MVP adds none.
-- Status: status block `live`, corpus block `snapshot`.
+- Status: two capsules: "Brain status: live" and "Corpus: snapshot".
 
 ### Data contract: `DashboardState`
 
@@ -321,18 +393,119 @@ One new Codable type in ConsoleCore, following the `MeshState` shape
 path override `dashboardStatePath`, loader errors surface as an error
 state, never a silent fallback to stale data without the age shown).
 
-Fields, all optional except `capturedAt` and `source`, so a partial
-snapshot renders what it has and omits the rest:
+Schema. All types are `Codable`, `Sendable`, `Equatable`, matching
+ConsoleCore. All fields are optional except `capturedAt` and `source`,
+so a partial snapshot renders what it has and omits the rest. Dates
+are ISO-8601 strings, decoded with the same strategy `MeshState`
+uses. The bundled fixture must conform to this schema exactly, and
+test 1 decodes the bundled fixture itself, not a hand-made copy.
 
-| Field | Feeds | Notes |
-| --- | --- | --- |
-| `capturedAt`, `source` | All snapshot panels | Same names and age math as `MeshState` (`SnapshotAge`). |
-| `briefLines` | Panel 1 | Pre-ranked lines with per-line `sourceTag`; the app re-ranks by the fixed rule order only if lines carry a `kind` (approval, calendar, blocked, knowledge, revenue). If `kind` is absent, lines render in file order. |
-| `calendarNext` | Panel 1 | Title and start time only. No attendees, no locations, no notes. |
-| `surfaces` | Panel 4 | Per-surface: name, state word, note, asOf. The app renders the words it is given and does not upgrade them. |
-| `revenue` | Panel 5 | Ladder rows (name, price string, gate note) plus `verifiedRevenueLine` and `verifiedRevenueAsOf`. Price is a string, never a number the app formats into a claim. |
-| `knowledge` | Panel 7 | Corpus items: name, state word, note, asOf. |
-| `skillsBrain` | Panel 6 block 2 | One blocker line plus `asOf`. Nothing else until Phase 1 exists. |
+```swift
+public struct DashboardState: Codable, Sendable, Equatable {
+    public let capturedAt: String            // required, ISO-8601
+    public let source: String                // required
+    public let briefLines: [BriefLine]?      // Panel 1
+    public let surfaces: [SurfaceRow]?       // Panel 4
+    public let revenue: RevenueState?        // Panel 5
+    public let skillsBrain: SkillsBrainState? // Panel 6 block 2
+    public let knowledge: KnowledgeState?    // Panel 7
+}
+
+public struct BriefLine: Codable, Sendable, Equatable {
+    public let kind: Kind                    // required
+    public let text: String                  // required
+    public let sourceTag: String             // required
+    public enum Kind: String, Codable, Sendable {
+        case approval, calendar, blocked, knowledge, revenue
+    }
+}
+
+public struct SurfaceRow: Codable, Sendable, Equatable {
+    public let name: String                  // required
+    public let stateWord: String             // required; rendered raw if outside the vocabulary
+    public let note: String?                 // free text, rendered as given
+    public let asOf: String?                 // ISO-8601
+    public let count: Int?                   // Panel 4 counts live here, never in note
+    public let countAsOf: String?           // ISO-8601, required if count is present
+    public let routeURL: String?             // external link target; absent means no link
+}
+
+public struct RevenueState: Codable, Sendable, Equatable {
+    public let ladder: [LadderRow]           // required if revenue is present
+    public let verifiedRevenueLine: String?  // e.g. "$0"
+    public let verifiedRevenueAsOf: String?  // required if the line is present
+    public let gateNote: String?             // gate states in words
+}
+public struct LadderRow: Codable, Sendable, Equatable {
+    public let name: String                  // required
+    public let price: String                 // required; a string, never a number the app formats into a claim
+    public let gateNote: String?
+}
+
+public struct SkillsBrainState: Codable, Sendable, Equatable {
+    public let blockerLine: String           // required
+    public let asOf: String                  // required, ISO-8601
+}
+
+public struct KnowledgeState: Codable, Sendable, Equatable {
+    public let corpus: [CorpusItem]          // required if knowledge is present
+    public let queueCounts: QueueCounts?
+}
+public struct CorpusItem: Codable, Sendable, Equatable {
+    public let name: String                  // required
+    public let stateWord: String             // required; same raw-render rule as surfaces
+    public let note: String?
+    public let asOf: String?
+}
+public struct QueueCounts: Codable, Sendable, Equatable {
+    public let waiting: Int                  // required
+    public let inPipeline: Int               // required
+    public let failed: Int                   // required
+    public let asOf: String                  // required, ISO-8601
+}
+```
+
+Example fixture (abridged; the bundled fixture follows this shape):
+
+```json
+{
+  "capturedAt": "2026-11-02T15:00:00-05:00",
+  "source": "hand-made fixture from the dashboard spec, 2026-11-02",
+  "briefLines": [
+    {"kind": "revenue", "text": "Selling gates closed: WS-06 copy approval and live Stripe outstanding.", "sourceTag": "revenue gates"}
+  ],
+  "surfaces": [
+    {"name": "Otto", "stateWord": "blocked", "note": "Control waits on the in-app scoped grant.", "asOf": "2026-11-02T15:00:00-05:00"}
+  ],
+  "revenue": {
+    "ladder": [{"name": "AI Automation Snapshot", "price": "$333.33", "gateNote": "Gated"}],
+    "verifiedRevenueLine": "$0",
+    "verifiedRevenueAsOf": "2026-11-01",
+    "gateNote": "Public selling gated on WS-06 copy approval and live Stripe (test mode today)."
+  },
+  "skillsBrain": {"blockerLine": "Phase 1 waits on the registry-of-record ruling.", "asOf": "2026-11-02"},
+  "knowledge": {
+    "corpus": [{"name": "OpenKnowledge corpus import", "stateWord": "blocked", "note": "Not done; the structural gap.", "asOf": "2026-11-02"}],
+    "queueCounts": null
+  }
+}
+```
+
+Store and refresh lifecycle. A `DashboardStore` (`@MainActor
+@Observable`, the `Store`/`BotStore` pattern) owns the loaded
+`DashboardState`, its error, and its source path; it is injected in
+the environment at the app root. It loads on init and reloads when:
+the toolbar Refresh button fires (the button also gains
+`dashboard.refresh()` next to the existing `store.refresh()` and
+`bots.refresh()` calls), or the Settings path changes and M3ta taps
+Reload. Settings gains one field, "Dashboard state JSON path (empty =
+bundled fixture)", stored under `dashboardStatePath`, plus a "Loaded
+from" line, exactly mirroring the mesh-state field. The dashboard's
+loopback probes run on screen appearance and again whenever the
+`.consoleRefresh` notification fires; while the dashboard is visible
+they repeat on the Settings interval `jarvisRefreshSeconds` as
+configured (range 5 to 120, default 10), never faster. No other
+timers exist.
 
 Producer: out of scope for the MVP build, named here so the contract
 is honest: a snapshot is produced by the same kind of job that produced
@@ -347,10 +520,12 @@ in this spec's Current state, each with its date.
 The Design Masterpiece Pipeline applies: cinematic within the app's
 existing language, not a second visual system.
 
-- Hero: the ratified Th3 M3ta Way badge (SVG master from the brand
-  kit, unchanged) at hero size, one glow treatment behind it, max one
-  per surface per the theme rules. No nebula or gradient field competes
-  with panel text.
+- Hero: the ratified Th3 M3ta Way badge (asset path in Brand
+  application) at hero size, with one glow treatment behind it. That
+  glow is the surface's single glow allowance under the tokens.json
+  rule "nebula gradient = hero/glow only, max one per surface": if
+  the badge glow uses the nebula gradient, nothing else on the screen
+  may use it. No nebula or gradient field competes with panel text.
 - Motion set, closed list: (1) hero entrance, panels rise and fade in
   a 60ms stagger, once per screen appearance, never on refresh;
   (2) the voice orb pulse in `working` state only, driven by stream
@@ -364,10 +539,11 @@ existing language, not a second visual system.
   off, orb becomes a static filled state with the same meaning, counts
   swap instantly (they already do).
 - Performance: animations run on the render thread's standard SwiftUI
-  transitions; the dashboard adds no timers of its own. Live probes
-  keep the app's existing refresh pattern (manual Refresh plus the
-  JARVIS live view's interval where that view is used); the dashboard
-  does not poll faster than the existing 10 second default anywhere.
+  transitions. The dashboard's only repeating work is the probe cycle
+  defined in the data contract (on appearance, on `.consoleRefresh`,
+  and on the configured `jarvisRefreshSeconds` interval while
+  visible); it adds no other timers and never polls faster than the
+  configured interval.
 - Static reliability floor: with JARVIS down and no snapshot file, the
   dashboard still renders every panel frame with its honest state
   (offline card for live blocks, "No snapshot loaded" for snapshot
@@ -378,17 +554,35 @@ existing language, not a second visual system.
 ### Brand application
 
 - The badge is the brand kit's standard badge, unchanged, per the
-  ratified rule. No new logo work in this spec.
+  ratified rule. No new logo work in this spec. Asset path, exact:
+  source master `th3-m3ta-way/svg/th3-m3ta-way-badge-circle.svg` in
+  ~/workspace/m3ta-g3ar/brand-kit/. SwiftUI does not render SVG
+  natively, so the app ships the brand kit's own PNG export,
+  `th3-m3ta-way/png/th3-m3ta-way-badge-circle-1080px.png`, copied at
+  build time to apps/m3ta-os-console/Resources/brand/ under the same
+  file name and loaded from the app bundle; the SVG master is copied
+  alongside it as the source record. Acceptance test 11 checks the
+  packaged app renders this asset, not the `BrandHeader`
+  rounded-rectangle placeholder the app draws today.
 - Colors: unresolved between the three systems in Current state, and
-  deliberately so. The implementation step takes whichever system
-  M3ta picks at resolve and expresses the dashboard entirely in that
-  system's existing token names (`TMWTokens` if system 2, new
-  `DashboardTokens` mirroring the brief's hexes if system 1). Two
-  binding rules either way: every text-bearing pair the dashboard
-  introduces gets a contrast test in `ThemeTests` style before the
-  screen ships (the theme file already carries pair lists for exactly
-  this), and status colors come from the semantic status tokens of the
-  chosen system, never from brand accent colors.
+  deliberately so, with an honest correction to the easy version of
+  that claim: only system 2 drops in as tokens today, because only
+  `TMWTokens` carries a complete dashboard set (bg, surface, line,
+  text, textMuted, accent, accentFill, onAccent, accent2, link, glow,
+  success, alert). Systems 1 and 3 each need a token-completion step
+  before any dashboard code: system 1 has bg, surface, and accent
+  hexes only, so a `DashboardTokens` set must be designed for text,
+  textMuted, line, link, and the success/alert slots; system 3 maps
+  to `M3taTokens` (navy, gold) plus the same missing slots. Designed
+  hexes in that step are proposals, labeled as such, and they ship
+  only if they pass the contrast rule below. The resolve step picks
+  the system; if it picks 1 or 3, token completion is a named first
+  task of the build, not an assumption inside it. Two binding rules
+  either way: every text-bearing pair the dashboard introduces gets a
+  contrast test in `ThemeTests` style before the screen ships (the
+  theme file already carries pair lists for exactly this), and status
+  colors come from the semantic status tokens of the chosen system,
+  never from brand accent colors.
 - Type: system font today (Inter is named in tokens.json but not
   bundled; the dashboard does not bundle a font in the MVP). Numerals
   in counts use monospaced digits, as `StatusCard` already does.
@@ -397,6 +591,7 @@ existing language, not a second visual system.
 
 | Failure | Behavior |
 | --- | --- |
+| `MeshState` missing or unreadable, Dashboard selected | The Dashboard renders (see the Root view gating change in Shell and layout); Mesh-derived screens keep today's "No state" view; the sidebar stays usable. |
 | JARVIS offline on open | Live blocks show the existing offline pattern with Retry; snapshot panels render normally; the hero brief still renders from the snapshot. |
 | Snapshot file missing or unreadable | Snapshot panels show "No snapshot loaded" plus the attempted path; live blocks unaffected. No silent substitution of the bundled fixture once a path override is set and fails: the error shows, as `BotStore` does when a live map fails (it falls back and says so; the dashboard instead shows the error state, because falling back to a stale fixture while claiming freshness is the failure this design exists to prevent). Deviation from `BotStore` behavior, recorded deliberately. |
 | Snapshot older than 24 hours | Age line turns to the warn tone and brief lines from that snapshot are prefixed "As of <date>" in the hero. Data still renders; staleness is labeled, not hidden. |
@@ -409,8 +604,11 @@ existing language, not a second visual system.
 
 Unit tests in Tests/ConsoleCoreTests/DashboardStateTests.swift:
 
-1. Loader: a fixture with all fields decodes; a fixture with only
-   `capturedAt` and `source` decodes and yields empty panels data.
+1. Loader: the bundled fixture decodes against the schema in the data
+   contract; a fixture with only `capturedAt` and `source` decodes
+   and yields empty panels data; a fixture with a `briefLine` whose
+   `kind` is outside the enum fails to decode (the enum is closed,
+   unlike surface state words, which render raw).
 2. Loader failure: a malformed file throws; a missing override path
    throws (no bundled fallback when an override is set).
 3. Brief ranking: lines with kinds render in the fixed order
@@ -428,19 +626,25 @@ Unit tests in Tests/ConsoleCoreTests/DashboardStateTests.swift:
 
 View-level checks (manual, on the Mac, recorded in the build PR):
 
-7. Launch lands on Dashboard; sidebar shows the Command group; every
-   existing screen still reachable and unchanged.
+7. Sidebar shows the Command group with Dashboard; every existing
+   screen still reachable and unchanged. Launch lands on Dashboard
+   only if the resolve step picked Dashboard as the default (Open
+   question 2); otherwise launch lands on Overview and Dashboard is
+   one click away. Test whichever the resolve step recorded.
 8. With JARVIS running: approvals count, JARVIS row, REA skills block,
    and brain status show live values with checked-at times.
 9. With JARVIS stopped: offline states render per the failure table;
    the app does not hang and the snapshot panels still render.
 10. Reduce Motion on: no entrance stagger, orb static, counts swap
-    instantly; VoiceOver reads each panel's name, status word, and
-    source line as one element per panel header.
+    instantly; VoiceOver reads each panel's name, its status capsules,
+    and source line as one element per panel header.
+11. Badge: the packaged app's hero renders the bundled badge PNG from
+    Resources/brand (compare against the brand-kit file), not a drawn
+    placeholder.
 
 Live acceptance:
 
-11. Packaged app on the Mac opens on the dashboard and definition-of-
+12. Packaged app on the Mac opens on the dashboard and definition-of-
     done item 6 passes end to end. Before the run, the expected weak
     panels are recorded here: Panels 4 and 7, because their snapshot
     content is only as good as the first hand-made fixture.
@@ -449,7 +653,9 @@ Live acceptance:
 
 MVP (this change): the Dashboard screen and its seven panels as
 specced, `DashboardState` plus loader plus tests, the hero and motion
-set, the default-on-launch change, and the Mac live verification.
+set, the `ChatRunStore` lift, the `RootView` gating change, the
+launch-default change only if the resolve step picks it, and the Mac
+live verification.
 
 Later, each its own change and its own gate: speech input and output
 and the speaking avatar (Panel 2's designed half); the approvals queue
@@ -495,3 +701,55 @@ registered on the Mac).
    cadence: a scheduled agent job, or a manual export M3ta triggers?
 4. Voice: when speech is specced, is the direction local-only speech
    processing, matching the local-first model rule?
+
+## Goldfish resolution note (2026-11-02)
+
+A fresh zero-context reviewer read only this draft plus its referenced
+sources (the EGM runtime step spec, the local-egm and action-card
+skills, the brand-kit spec, the Wolfe pair analysis, the Console
+README, the knowledge module spec, and the Console sources it cites)
+and returned 17 findings: 3 blockers, 10 major, 4 minor, 0 notes.
+Resolutions, all folded into the text above:
+
+- Blockers: the `DashboardState` contract now carries a complete
+  schema (Swift types for every nested type, optionality, the closed
+  `briefLines.kind` enum, an example fixture, and a test that decodes
+  the bundled fixture itself) (finding 1). The one-status-per-panel
+  rule is replaced by one labeled capsule per source block, with the
+  header wording specified for Panels 2, 3, 6, and 7 (finding 2). The
+  `RootView` gating change is specified: the Dashboard is not gated on
+  `MeshState`, and each direction of failure is handled (finding 3).
+- The voice orb's shared state is specified: the chat model lifts to
+  an app-level `ChatRunStore`, and the orb's never-opened-chat state
+  is defined (finding 4). The brand "drops in as tokens" claim is
+  withdrawn for systems 1 and 3: only system 2 is complete today, and
+  a labeled token-completion step is named for the others, with
+  `M3taTokens` named for system 3 (finding 5). The badge asset path is
+  exact: brand-kit SVG master as source record, the kit's own 1080px
+  PNG in Resources/brand in the bundle, plus acceptance test 11
+  (finding 6). A routing table gives every panel and Panel 4 row an
+  internal screen or the snapshot's `routeURL`, with no hard-coded
+  URLs (finding 7).
+- Calendar folds into `briefLines` as kind `calendar`; `calendarNext`
+  is deleted, and the brief pipeline is stated in order (re-rank, omit
+  absent kinds, cap at five) (finding 8). Counts get real fields:
+  `count`/`countAsOf` on surfaces, `queueCounts` on knowledge, and
+  the Orbit row's source is fixed as `DashboardState`, not `BotMap`
+  (finding 9). A `DashboardPanel` component is defined, with a
+  vocabulary-to-token mapping table; `StatusStyle` stays untouched
+  for existing screens (finding 10). The store and refresh lifecycle
+  is specified: `DashboardStore`, the `dashboardStatePath` Settings
+  field, Refresh and `.consoleRefresh` handling, and the configured
+  `jarvisRefreshSeconds` interval (finding 11).
+- The launch-default choice is moved fully to the resolve step;
+  Design, the MVP list, and test 7 are conditional on it (finding
+  12). Every load-bearing revenue and brand fact now carries a file
+  citation that can be checked (finding 13).
+- Minor: the grid is a fixed two columns collapsing below 720pt
+  (finding 14); the REA block shows the first 12 names, matching
+  `JarvisLiveView` (finding 15); Overview's loopback checks are
+  corrected to three and named, and Definition of done item 2 builds
+  on the corrected inventory (finding 16); the hero rule is cited
+  correctly, the tokens.json nebula rule is quoted as written, and
+  the badge glow is defined as the surface's single glow allowance
+  (finding 17).
