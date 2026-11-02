@@ -97,9 +97,11 @@ public enum EGMReviewFailure: Error, Sendable, Equatable {
 /// own headings or fences. Validation and the size cap run here, before
 /// any network call.
 public enum EGMReviewerPrompt {
-    /// Cap on the fully built prompt, in UTF-8 bytes. A heuristic, not a
-    /// verified model context limit; recheck at live verification.
-    public static let maxPromptBytes = 200_000
+    /// Cap on the fully built prompt, in UTF-8 bytes. Sized from the
+    /// observed local serving context (40,960 tokens, 2026-11-02) at
+    /// roughly 4 bytes per token, leaving room for the reply; still a
+    /// heuristic, since byte-to-token ratios vary by draft.
+    public static let maxPromptBytes = 120_000
 
     private static let instructionHead = """
         You are a cold reviewer in the Elephant-Goldfish Model. You have no

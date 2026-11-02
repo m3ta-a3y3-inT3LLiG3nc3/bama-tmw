@@ -42,10 +42,13 @@ Severities, high to low, exact ids: `blocker`, `major`, `minor`, `note`.
   default, "default". Only the endpoint helper accepts an agent id.
 - Model routing (local first) and the JEV approval gate live in JARVIS,
   not in the app (per the comments in CopilotClient.swift).
-- Carried-over evidence, to recheck at live verification: on 2026-11-01
-  the runtime's default route was the local model muse-glimmer:30b-mlx
-  (live AG-UI run verified), and the runtime serves agents by id at
-  /api/copilotkit/agent/<agentId>/run.
+- Observed live, 2026-11-02: the runtime's default route is provider
+  ollama, model muse-glimmer:30b-mlx, paid false (GET /api/models), with
+  a configured fallback route m3ta/qwen3-abl-8b-nothink-32k. The runtime
+  serves agents by id at /api/copilotkit/agent/<agentId>/run, and an
+  unknown agent id answers HTTP 404 with a JSON error body
+  ("Agent 'egm-goldfish' does not exist"); both facts probed read-only
+  against the live runtime.
 - No EGM code exists in ConsoleCore today (checked by search, 2026-11-02).
 - EGM method: ~/workspace/custom-skills/local-egm/SKILL.md. A goldfish
   review is fresh reviewers seeing only the draft plus its referenced
@@ -168,11 +171,13 @@ Steps, exactly:
 
 1. Build the prompt with `EGMReviewerPrompt`. Validation and the size
    cap run here and throw before any network call. The cap: the fully
-   built prompt, measured in UTF-8 bytes, must be at most 200,000
-   bytes, else throw `inputTooLarge(bytes:)`. The cap is a heuristic,
-   not derived from a verified context limit; the local model's context
-   size was not in the reviewed material. Recheck it at live
-   verification and record the real limit here.
+   built prompt, measured in UTF-8 bytes, must be at most 120,000
+   bytes, else throw `inputTooLarge(bytes:)`. The size derives from an
+   observed bound, not a guess: on 2026-11-02 the local model server
+   (Ollama llama-server) was running with a 40,960-token context, and
+   120,000 bytes at roughly 4 bytes per token leaves room for the
+   reply inside it. It stays a heuristic; the exact token count of a
+   prompt varies, and the fallback route's context differs.
 2. Mint both ids internally: threadId is "egm-review-" plus a UUID;
    the prompt message id is "egm-prompt-" plus a UUID. No caller can
    supply either, so no existing thread can be reused.
@@ -291,9 +296,11 @@ All operative criteria live in the client instruction block, which is
 canonical. The system prompt sets the role only and must not add
 criteria, so the two copies cannot diverge on substance.
 
-Registration checklist (the exact config mechanism in JARVIS is
-recorded here at live verification; it was not in the reviewed
-material):
+Registration checklist (observed 2026-11-02: JARVIS ships as the
+packaged "Meta OS.app" Electron app and its agent registry is internal
+to the app, so registration is an in-app step in M3ta's own session,
+not a config file edit; the exact in-app mechanism gets recorded here
+when it is done):
 
 1. Register an agent with id `egm-goldfish` in the CopilotKit runtime,
    with the system prompt above, no tools, and no memory or persisted
@@ -326,11 +333,12 @@ is what makes the local-first requirement checkable for this agent.
 All failure behavior lives in the per-failure table under
 `EGMReviewReport` and `EGMReviewFailure` above. Two notes:
 
-- The runtime's behavior for an unknown agent id is not yet observed.
-  The client covers both shapes: a non-200 before streaming (404 maps
-  to `agentNotRegistered`) and a 200 followed by a run error event
-  (message-matched to `agentNotRegistered`, else `runFailed`). Record
-  the observed behavior in this spec at live verification.
+- The runtime's behavior for an unknown agent id is observed, not
+  assumed (2026-11-02 probe): HTTP 404 with a JSON error body before any
+  streaming, which the client maps to `agentNotRegistered`. The second
+  covered shape (a 200 followed by a run error event, message-matched
+  to `agentNotRegistered`, else `runFailed`) stays as belt and braces
+  for other runtimes and future versions.
 - Timeout: `review` takes a timeout (default 300 s) passed through to
   `CopilotClient.run`. A timeout surfaces as the transport's URLError,
   like chat. There is no retry loop.
@@ -377,7 +385,7 @@ Unit tests in Tests/ConsoleCoreTests/EGMReviewTests.swift:
 11. Validation: an empty draft and a whitespace-only draft throw
     `validation`; duplicate source names throw `validation`; zero
     sources and an empty title are accepted.
-12. Size cap: a request whose built prompt exceeds 200,000 UTF-8 bytes
+12. Size cap: a request whose built prompt exceeds 120,000 UTF-8 bytes
     throws `inputTooLarge` before any network call (asserted by
     building the prompt only, against a closed-port endpoint).
 13. Closed loopback port: a review call against port 9 with a 3 s
@@ -417,8 +425,9 @@ only if it can spawn a fresh server-side thread with no shared state.
   feature is not live until test 15 passes.
 - Local model output shape varies. The JSON contract plus the honest
   parser keeps a bad reply visible instead of silent.
-- The 200,000-byte cap is a heuristic until the real context limit is
-  recorded at live verification.
+- The 120,000-byte cap is sized from the observed 40,960-token local
+  serving context (2026-11-02) and remains a heuristic; byte-to-token
+  ratios vary by draft.
 
 ## Goldfish resolution note (2026-11-02)
 
