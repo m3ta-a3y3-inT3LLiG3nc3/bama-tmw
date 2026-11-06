@@ -243,6 +243,7 @@ struct SettingsView: View {
     @AppStorage("meshStatePath") private var path = ""
     @AppStorage("botMapPath") private var botPath = ""
     @AppStorage("dashboardStatePath") private var dashPath = ""
+    @AppStorage("crmBaseURL") private var crmBaseURL = ""
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     @AppStorage("jarvisRuntimePort") private var runtimePort = 9782
     @AppStorage("jarvisReaPort") private var reaPort = 9783
@@ -262,6 +263,10 @@ struct SettingsView: View {
             Text("Bot map from: \(bots.sourcePath)").font(.caption)
             TextField("Dashboard state JSON path (empty = bundled fixture)", text: $dashPath)
             Text("Loaded from: \(dashboard.sourcePath ?? "none")").font(.caption)
+            Section("M3ta-CRM module (specs/m3ta-os-console-crm.md)") {
+                TextField("CRM base URL (empty = http://localhost:3120)", text: $crmBaseURL)
+                Text("The CRM bearer token is never stored here. It comes from the CRM_API_TOKEN environment variable at launch; without it the CRM tab shows its unbound screen. Base URL changes apply when the CRM tab reloads its config (Refresh).").font(.caption).foregroundStyle(.secondary)
+            }
             Button("Reload") { store.refresh(); bots.refresh(); dashboard.refresh() }
             Text("No secrets are stored. JARVIS checks are read-only GETs on loopback; the console never starts JARVIS.").font(.caption).foregroundStyle(.secondary)
         }.padding().frame(width: 460)

@@ -35,6 +35,7 @@ struct DashboardView: View {
                     case .hermes: HermesTabView(health: copilotHealth, runtimeUp: status?.runtimeUp ?? false, navigate: navigate, goToApprovals: { tab = .qb })
                     case .metaOS: MetaOSTabView(status: status, navigate: navigate)
                     case .adam: ADAMTabView()
+                    case .crm: CRMTabView()
                     }
                 }
                 .padding(M3taTokens.Spacing.xl)
@@ -438,10 +439,11 @@ struct DashboardView: View {
     }
 }
 
-/// The four dashboard tabs (features addendum section 1). QB is the
+/// The dashboard tabs (features addendum section 1; CRM added by the
+/// CRM module spec, specs/m3ta-os-console-crm.md). QB is the
 /// orchestration home and the default on launch.
 enum DashboardTab: String, CaseIterable, Identifiable {
-    case qb = "QB", hermes = "Hermes", metaOS = "Meta OS", adam = "A.D.A.M."
+    case qb = "QB", hermes = "Hermes", metaOS = "Meta OS", adam = "A.D.A.M.", crm = "CRM"
     var id: String { rawValue }
 }
 
