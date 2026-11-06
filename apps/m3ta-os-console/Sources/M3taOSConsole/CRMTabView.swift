@@ -8,6 +8,15 @@ import ConsoleCore
 /// unbound (no token in the environment), offline (bound, nothing
 /// answered), and live (each panel its own Probe). Writes happen only
 /// from the two create forms, on the operator's confirm tap.
+///
+/// Layout follows the dashboard's house grammar (the sibling tabs and
+/// DashboardPanel): panels stack at Spacing.l; the Pipeline panel is
+/// the hero strip (hero-scale metrics over caption labels, the
+/// approvals-strip pattern); list rows are firstTextBaseline HStacks
+/// with a medium callout name, a muted caption subline, and a
+/// monospaced right value; sections inside a panel break on a
+/// dashLine divider; forms compose as labeled sub-blocks on the
+/// nested chip surface (the social-hero pattern).
 struct CRMTabView: View {
     @State private var crm = CRMStore()
     @AppStorage("jarvisRefreshSeconds") private var refreshSeconds = 10
@@ -65,11 +74,13 @@ struct CRMTabView: View {
     private var unboundPanel: some View {
         DashboardPanel(title: "CRM not connected", capsules: [("API", .blocked)],
                        sourceLine: "M3ta-CRM machine API · no token in this app's environment") {
-            VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
-                Text("This module is unbound. The Console never stores the CRM token, so it comes from the environment the app was launched with.")
-                    .font(.callout).foregroundStyle(Color.dashText)
-                if let problem = crm.config.bindProblem {
-                    Text(problem).font(.callout).foregroundStyle(Color.dashSlot(.blocked))
+            VStack(alignment: .leading, spacing: M3taTokens.Spacing.m) {
+                VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
+                    Text("This module is unbound. The Console never stores the CRM token, so it comes from the environment the app was launched with.")
+                        .font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
+                    if let problem = crm.config.bindProblem {
+                        Text(problem).font(.callout).foregroundStyle(Color.dashSlot(.blocked))
+                    }
                 }
                 Text("Set CRM_API_TOKEN to the same value the CRM server runs with, then relaunch the app (or press Refresh after changing the base URL). For the packaged app, launch it with the token in its environment (the run sheet's open --env step in the build notes); a Finder double-click inherits no shell environment. Base URL in use: \(crm.config.baseURL.absoluteString) (default http://localhost:3120; override with CRM_BASE_URL or Settings). The token is only ever sent to a loopback or HTTPS base URL. Writes attribute as x-agent-id: \(crm.config.agentId).")
                     .font(.caption).foregroundStyle(Color.dashMuted)
@@ -82,9 +93,9 @@ struct CRMTabView: View {
     private func offlinePanel(_ snap: CRMSnapshot) -> some View {
         DashboardPanel(title: "CRM not answering", capsules: [("API", .blocked)],
                        sourceLine: "Bound, but every read failed · checked \(snap.checkedAt.formatted(date: .omitted, time: .standard))") {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
                 if case .offline(let why) = snap.companies {
-                    Text("Roster read: \(why)").font(.callout).foregroundStyle(Color.dashText)
+                    Text("Roster read: \(why)").font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
                 }
                 Text("HTTP 503 means the CRM server's own token is unset (its lane is disabled). HTTP 401 means this app's token does not match the server's. A connection error means the server is not running at \(crm.config.baseURL.absoluteString). The panels below show each read's own state.")
                     .font(.caption).foregroundStyle(Color.dashMuted)
@@ -97,28 +108,55 @@ struct CRMTabView: View {
     private func cap<T>(_ p: Probe<T>) -> DashboardStatus { p.value != nil ? .live : .blocked }
     private func checked(_ snap: CRMSnapshot) -> String { "checked \(snap.checkedAt.formatted(date: .omitted, time: .standard))" }
 
+    /// The hero strip: pipeline value, open deals, and won lead at the
+    /// approvals-strip scale (rounded semibold value over a caption
+    /// label); the remaining totals sit under a divider at reading
+    /// scale; the stage breakdown closes the panel as revenue-style
+    /// rows (name left, count and value monospaced in accent2 right).
     private func summaryPanel(_ snap: CRMSnapshot) -> some View {
         DashboardPanel(title: "Pipeline", capsules: [("Summary", cap(snap.summary))],
                        sourceLine: "GET /api/v1/summary · \(checked(snap))") {
             switch snap.summary {
             case .ok(let s):
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: M3taTokens.Spacing.m) {
+                    HStack(alignment: .top, spacing: M3taTokens.Spacing.xl) {
+                        heroMetric("Pipeline", money(s.pipelineValue))
+                        heroMetric("Open deals", "\(s.openDeals)")
+                        heroMetric("Won", "\(s.wonDeals) · \(money(s.wonValue))")
+                        Spacer(minLength: 0)
+                    }
+                    Divider().overlay(Color.dashLine)
                     HStack(spacing: M3taTokens.Spacing.l) {
-                        metric("Open deals", "\(s.openDeals)")
-                        metric("Pipeline", money(s.pipelineValue))
-                        metric("Won", "\(s.wonDeals) · \(money(s.wonValue))")
                         metric("Lost", "\(s.lostDeals)")
                         metric("Contacts", "\(s.contacts)")
                         metric("Companies", "\(s.companies)")
                     }
                     if !s.byStage.isEmpty {
-                        Text(s.byStage.keys.sorted().map { "\($0): \(s.byStage[$0]?.count ?? 0)" }.joined(separator: " · "))
-                            .font(.caption).foregroundStyle(Color.dashMuted)
+                        Divider().overlay(Color.dashLine)
+                        VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
+                            ForEach(Array(s.byStage.keys.sorted().enumerated()), id: \.offset) { _, stage in
+                                if let r = s.byStage[stage] {
+                                    HStack(alignment: .firstTextBaseline) {
+                                        Text(stage).font(.callout).foregroundStyle(Color.dashText)
+                                        Spacer()
+                                        Text("\(r.count) · \(money(r.value))")
+                                            .font(.callout.monospaced().weight(.semibold)).foregroundStyle(Color.dashAccent2)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             case .offline(let why):
                 Text("Summary unavailable (\(why))").font(.callout).foregroundStyle(Color.dashMuted)
             }
+        }
+    }
+
+    private func heroMetric(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(value).font(.system(.title, design: .rounded).weight(.semibold)).monospacedDigit().foregroundStyle(Color.dashText)
+            Text(label).font(.caption).foregroundStyle(Color.dashMuted)
         }
     }
 
@@ -129,7 +167,7 @@ struct CRMTabView: View {
         }
     }
 
-    private func money(_ v: Double) -> String { "$\(Int(v))" }
+    private func money(_ v: Double) -> String { v.formatted(.currency(code: "USD")) }
 
     private func rosterPanel(_ snap: CRMSnapshot) -> some View {
         DashboardPanel(title: "Roster", capsules: [("Companies", cap(snap.companies))],
@@ -141,8 +179,13 @@ struct CRMTabView: View {
                     ForEach(rows) { c in
                         HStack(alignment: .firstTextBaseline, spacing: M3taTokens.Spacing.s) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(c.name).font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
-                                Text("\(c.slug) · \(c.type ?? "unknown type") · \(c.status ?? "unknown status")")
+                                HStack(spacing: 6) {
+                                    Text(c.name).font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
+                                    if let st = c.status {
+                                        DashboardCapsule(label: nil, status: .raw(st))
+                                    }
+                                }
+                                Text("\(c.slug) · \(c.type ?? "unknown type")")
                                     .font(.caption).foregroundStyle(Color.dashMuted)
                             }
                             Spacer()
@@ -190,13 +233,30 @@ struct CRMTabView: View {
         }
     }
 
+    /// One task row shape for both task panels (the routes return the
+    /// same row). Urgency reads off the existing slots, never new
+    /// colors: a non-default priority renders as a muted raw capsule
+    /// next to the title (the SurfaceRow pattern; the schema default
+    /// "normal" renders nothing, so the capsule only appears where a
+    /// priority was actually set), and an overdue due date takes the
+    /// blocked slot. Row order is the server's; the view never
+    /// re-sorts.
     private func taskRows(_ rows: [CRMTask], empty: String) -> some View {
         VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
             if rows.isEmpty { Text(empty).font(.callout).foregroundStyle(Color.dashMuted) }
             ForEach(rows) { t in
                 HStack(alignment: .firstTextBaseline, spacing: M3taTokens.Spacing.s) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(t.title).font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
+                        HStack(spacing: 6) {
+                            Text(t.title).font(.callout.weight(.medium)).foregroundStyle(Color.dashText)
+                            if let p = t.priority, p != "normal" {
+                                Text(p)
+                                    .font(.caption.monospaced().weight(.medium))
+                                    .padding(.horizontal, 7).padding(.vertical, 2)
+                                    .background(Color.dashSlot(.raw(p)).opacity(0.18), in: .capsule)
+                                    .foregroundStyle(Color.dashSlot(.raw(p)))
+                            }
+                        }
                         Text(taskSubline(t)).font(.caption).foregroundStyle(Color.dashMuted)
                     }
                     Spacer()
@@ -236,8 +296,9 @@ struct CRMTabView: View {
                                 if let co = c.companyDisplayName { Text(co).font(.caption).foregroundStyle(Color.dashMuted) }
                             }
                             Spacer()
-                            Text("last activity \(c.lastActivity ?? "unknown")")
-                                .font(.caption).foregroundStyle(Color.dashMuted)
+                            Text("last activity \(lastActivityLine(c))")
+                                .font(.caption.monospaced())
+                                .foregroundStyle(Color.dashSlot(.designed))
                         }
                     }
                 }
@@ -247,40 +308,66 @@ struct CRMTabView: View {
         }
     }
 
+    /// Last activity as a readable date when the payload's ISO string
+    /// parses (the CRMDate parser), the raw string when it does not:
+    /// a display fallback, never a dropped value. The alert slot marks
+    /// every row in this panel as cold by the server's own window.
+    private func lastActivityLine(_ c: CRMContact) -> String {
+        guard let raw = c.lastActivity else { return "unknown" }
+        if let d = CRMDate.parse(raw) { return d.formatted(date: .abbreviated, time: .omitted) }
+        return raw
+    }
+
     // MARK: Create forms (the HITL writes)
 
+    /// The two forms compose as labeled sub-blocks on the nested chip
+    /// surface (the social-hero pattern), fields in the knowledge
+    /// panel's rounded-border style. The write semantics are the
+    /// spec's: confirm tap only, controls disabled while a write is
+    /// in flight, the server's answer rendered under the divider.
     private var createPanel: some View {
         DashboardPanel(title: "Add", capsules: [("Writes", .live)],
                        sourceLine: "POST /api/v1/contacts · POST /api/v1/tasks · your tap is the confirmation; writes attribute as \(crm.config.agentId)") {
             VStack(alignment: .leading, spacing: M3taTokens.Spacing.m) {
-                HStack(spacing: M3taTokens.Spacing.s) {
-                    TextField("Contact full name", text: $contactName)
-                    TextField("Email", text: $contactEmail)
-                    TextField("Phone", text: $contactPhone)
-                    TextField("Company", text: $contactCompany)
-                    Button("Create contact") {
-                        writing = true
-                        Task { await crm.createContact(CRMNewContact(
-                            fullName: contactName,
-                            email: contactEmail.isEmpty ? nil : contactEmail,
-                            phone: contactPhone.isEmpty ? nil : contactPhone,
-                            companyName: contactCompany.isEmpty ? nil : contactCompany)); writing = false }
-                    }.disabled(writing || contactName.trimmingCharacters(in: .whitespaces).isEmpty)
+                formBlock("New contact") {
+                    HStack(spacing: M3taTokens.Spacing.s) {
+                        TextField("Contact full name", text: $contactName).textFieldStyle(.roundedBorder)
+                        TextField("Email", text: $contactEmail).textFieldStyle(.roundedBorder)
+                    }
+                    HStack(spacing: M3taTokens.Spacing.s) {
+                        TextField("Phone", text: $contactPhone).textFieldStyle(.roundedBorder)
+                        TextField("Company", text: $contactCompany).textFieldStyle(.roundedBorder)
+                        Spacer()
+                        Button("Create contact") {
+                            writing = true
+                            Task { await crm.createContact(CRMNewContact(
+                                fullName: contactName,
+                                email: contactEmail.isEmpty ? nil : contactEmail,
+                                phone: contactPhone.isEmpty ? nil : contactPhone,
+                                companyName: contactCompany.isEmpty ? nil : contactCompany)); writing = false }
+                        }.disabled(writing || contactName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
                 }
-                HStack(spacing: M3taTokens.Spacing.s) {
-                    TextField("Task title", text: $taskTitle)
-                    Picker("Kind", selection: $taskKind) {
-                        ForEach(taskKinds, id: \.self) { Text($0).tag($0) }
-                    }.labelsHidden().frame(width: 130)
-                    Toggle("Due", isOn: $taskHasDue).toggleStyle(.checkbox)
-                    if taskHasDue { DatePicker("", selection: $taskDue, displayedComponents: [.date]).labelsHidden() }
-                    Button("Create task") {
-                        writing = true
-                        Task { await crm.createTask(CRMNewTask(
-                            title: taskTitle, kind: taskKind,
-                            dueAt: taskHasDue ? taskDue : nil)); writing = false }
-                    }.disabled(writing || taskTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                formBlock("New task") {
+                    HStack(spacing: M3taTokens.Spacing.s) {
+                        TextField("Task title", text: $taskTitle).textFieldStyle(.roundedBorder)
+                        Picker("Kind", selection: $taskKind) {
+                            ForEach(taskKinds, id: \.self) { Text($0).tag($0) }
+                        }.labelsHidden().frame(width: 130)
+                    }
+                    HStack(spacing: M3taTokens.Spacing.s) {
+                        Toggle("Due", isOn: $taskHasDue).toggleStyle(.checkbox)
+                        if taskHasDue { DatePicker("", selection: $taskDue, displayedComponents: [.date]).labelsHidden() }
+                        Spacer()
+                        Button("Create task") {
+                            writing = true
+                            Task { await crm.createTask(CRMNewTask(
+                                title: taskTitle, kind: taskKind,
+                                dueAt: taskHasDue ? taskDue : nil)); writing = false }
+                        }.disabled(writing || taskTitle.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
                 }
+                Divider().overlay(Color.dashLine)
                 Text("The server does not dedupe creates: a second confirmed tap makes a second row. The buttons disable while a write is in flight.")
                     .font(.caption).foregroundStyle(Color.dashMuted)
                 if let w = crm.lastWrite {
@@ -291,5 +378,17 @@ struct CRMTabView: View {
                 }
             }
         }
+    }
+
+    /// One labeled form sub-block: a semibold header over the fields,
+    /// on the nested surface the dashboard uses for composed blocks.
+    private func formBlock<Content: View>(_ title: String, @ViewBuilder fields: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: M3taTokens.Spacing.s) {
+            Text(title).font(.callout.weight(.semibold)).foregroundStyle(Color.dashText)
+            fields()
+        }
+        .padding(M3taTokens.Spacing.m)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.dashBg.opacity(0.5), in: .rect(cornerRadius: M3taTokens.Radius.chip))
     }
 }

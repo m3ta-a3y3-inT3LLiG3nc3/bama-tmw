@@ -93,6 +93,92 @@ CRM repo, same pass:
   (native-module kind, file map, auth note). The manifest and
   INTEGRATIONS.md were inputs and are unchanged.
 
+## Layout refinement (2026-11-06, second pass)
+
+M3ta approved a layout pass on the CRM tab ("Let's do both": CRM tab
+layout + vault mapping; the vault half runs on the Mirror line, not
+here). Scope held to layout and presentation only: no CRMClient
+behavior, endpoint, or HITL write semantics changed; no server files
+touched; token handling unchanged.
+
+House grammar extracted from the sibling tabs before drafting:
+panels stack at Spacing.l inside DashboardPanel frames; hero numbers
+are a rounded semibold monospaced-digit value over a caption label
+(the approvals strip and StatusCard); list rows are
+firstTextBaseline HStacks (medium callout name, muted caption
+subline, monospaced right value, inline capsules per SurfaceRowView);
+sections inside a panel break on a dashLine divider; composed
+sub-blocks sit on dashBg.opacity(0.5) in a Radius.chip rect (the
+social hero); money reads monospaced semibold in accent2 (the
+revenue panel).
+
+What changed in CRMTabView.swift:
+
+- Pipeline is the hero strip: pipeline value, open deals, and won
+  lead at hero scale; lost, contacts, companies sit under a divider
+  at reading scale; the stage breakdown closes the panel as
+  revenue-style rows showing count AND value (the rollup value was
+  in the payload and previously undisplayed), stage names sorted
+  per the spec. All six summary totals still render (CRM-002).
+- Money renders through the USD currency FormatStyle. The previous
+  `Int()` truncation dropped cents ($8,888.88 read as $8888);
+  display only, values unchanged.
+- Roster rows carry the company status as an inline capsule next to
+  the name (the SurfaceRow pattern), freeing the subline to
+  slug + type. The capsule is constructed `.raw(status)` directly,
+  so a CRM status word can never inherit dashboard vocabulary
+  colors (a status of "live" renders muted verbatim, per the spec's
+  raw-word rule), never green by accident.
+- Urgency uses existing slots only. Task rows: an overdue due date
+  keeps the blocked slot; a priority capsule appears next to the
+  title only when a priority was actually set (see Goldfish 1).
+  Retention rows: last activity now parses through CRMDate and
+  renders as a readable date in the alert slot (the raw ISO string
+  was previously shown verbatim); an unparseable value falls back
+  to the raw string, never a dropped value. Row order is untouched
+  everywhere: the server's order stays authoritative.
+- Unbound and offline faces compose as designed surfaces: lead
+  statement at medium callout, the reason in its slot color, the
+  explainer as caption, the action last. All factual copy is
+  unchanged (the 503 / 401 / not-running distinction and the
+  open --env note survive verbatim in substance).
+- The Add forms compose as two labeled sub-blocks ("New contact",
+  "New task") on the nested chip surface, fields in the knowledge
+  panel's rounded-border style, arranged two rows per form, confirm
+  buttons right-aligned, the duplicate warning and the write
+  result under a divider. Bindings, the kind picker, the in-flight
+  disable, and both create calls are byte-for-byte the same logic.
+
+Goldfish pass (fresh-eyes re-read against CRM-001..006 and the
+house grammar, after the draft):
+
+1. Priority capsule on every row would be noise: the CRM schema
+   (read-only check) defaults priority to "normal", so most rows
+   would carry a meaningless chip. Fixed: the capsule renders only
+   for non-"normal" values.
+2. The two confirm buttons sat inconsistently (contact inline,
+   task right-pinned). Fixed: both right-aligned at the block edge.
+3. Hero metrics could crowd at narrow widths ("Won 3 · $8,888.88"
+   at title scale next to two siblings). Accepted: the CRM tab
+   renders full-width, not in the two-column grid, and the house
+   precedent sets hero numbers without scale guards. On the Mac
+   eyeball list below.
+4. Retention's alert tint reaches the alert slot through
+   `.designed`, the codebase's only accessor for that slot.
+   Accepted: the semantic alert color is the house warning slot,
+   and every row in that panel is cold by the server's own window.
+5. Tests: no test references view code (the suite is ConsoleCore
+   only) and no identifiers or state exposure changed, so no test
+   updates; the 89-test expectation stands.
+
+Not compiled, not run (same honest state as the build below): the
+Mac run sheet gains these eyeball items when it executes: hero
+strip at the narrowest window the Console supports; roster with a
+long company status word in the capsule; a task with a non-default
+priority and one overdue; a retention row's formatted date; both
+form blocks' field tab order and the right-aligned confirm buttons;
+unbound and offline faces against their pre-refinement copy.
+
 ## Verification state (honest)
 
 - **Not compiled, not run.** This VM has no Swift toolchain (`swift`
