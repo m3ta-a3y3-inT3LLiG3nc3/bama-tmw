@@ -68,20 +68,15 @@ struct DashboardView: View {
 
     private var tabBar: some View {
         HStack(spacing: M3taTokens.Spacing.s) {
-            ForEach(DashboardTab.allCases) { t in
-                Button { tab = t } label: {
-                    VStack(spacing: 3) {
-                        Text(t.rawValue).font(.headline)
-                            .foregroundStyle(tab == t ? Color.dashAccent : Color.dashMuted)
-                        Rectangle().fill(tab == t ? Color.dashAccent : Color.clear).frame(height: 2)
-                    }
-                    .padding(.horizontal, M3taTokens.Spacing.s)
-                    .contentShape(Rectangle())
+            Picker("Dashboard tab", selection: $tab) {
+                ForEach(DashboardTab.allCases) { t in
+                    Text(t.rawValue).tag(t)
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("\(t.rawValue) tab")
-                .accessibilityAddTraits(tab == t ? [.isSelected] : [])
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .fixedSize()
+            .accessibilityLabel("Dashboard tabs")
             Spacer()
             if let s = dash.state {
                 Text(s.isStale() ? "Snapshot stale" : "Snapshot").font(.caption).foregroundStyle(s.isStale() ? Color.dashSlot(.designed) : Color.dashMuted)
