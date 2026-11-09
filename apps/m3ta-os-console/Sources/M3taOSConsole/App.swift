@@ -45,23 +45,39 @@ final class DashboardStore {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case dashboard = "Dashboard", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case lookout = "Lookout", vault = "Vault", dashboard = "Dashboard", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Command", [.dashboard]), ("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
-    var story: String { switch self { case .dashboard: "M3-DASH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .dashboard: "gauge"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Command", [.lookout, .vault, .dashboard]), ("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
+    var story: String { switch self { case .lookout: "FB-1"; case .vault: "FB-2"; case .dashboard: "M3-DASH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .lookout: "binoculars"; case .vault: "folder"; case .dashboard: "gauge"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+}
+
+/// Phase 1 fix F4: full-screen Space is the default launch posture,
+/// applied by the app's own code at launch (never restored window state).
+/// CONSOLE_NO_FULLSCREEN=1 is the scripted-probe opt-out (LaunchPosture).
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        guard LaunchPosture.shouldLaunchFullScreen(environment: ProcessInfo.processInfo.environment) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+            guard let w = NSApp.windows.first(where: { $0.isVisible }) ?? NSApp.windows.first else { return }
+            w.collectionBehavior.insert(.fullScreenPrimary)
+            if !w.styleMask.contains(.fullScreen) { w.toggleFullScreen(nil) }
+        }
+    }
 }
 
 @main
 struct M3taOSConsoleApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var store = Store()
     @State private var bots = BotStore()
     @State private var dashboard = DashboardStore()
     @State private var chatRuns = ChatRunStore()
+    @State private var fieldBook = FieldBookStore()
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).environment(dashboard).environment(chatRuns).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).environment(dashboard).environment(chatRuns).environment(fieldBook).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         Settings { SettingsView().environment(store).environment(bots).environment(dashboard) }
     }
 }
@@ -70,6 +86,8 @@ struct RootView: View {
     @Environment(Store.self) var store
     @Environment(BotStore.self) var bots
     @Environment(DashboardStore.self) var dashboard
+    @Environment(FieldBookStore.self) var fieldBook
+    @Environment(\.scenePhase) var scenePhase
     // Dashboard is the launch default (M3ta's resolve call, 2026-11-02:
     // the central command center). CONSOLE_SCREEN still selects a screen
     // for scripted launches, including "Overview".
@@ -88,13 +106,23 @@ struct RootView: View {
             // gating change): it renders from DashboardState plus the
             // loopback probes whatever MeshState did, and a DashboardState
             // failure never blocks the other screens.
-            if (sel ?? .dashboard) == .dashboard {
+            if (sel ?? .dashboard) == .lookout {
+                LookoutView { rel in fieldBook.selectedRelativePath = rel; sel = .vault }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
+            } else if (sel ?? .dashboard) == .vault {
+                VaultBrowserView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
+            } else if (sel ?? .dashboard) == .dashboard {
                 DashboardView { s in sel = s }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
             } else if let st = store.state {
                 Group {
                     switch sel ?? .overview {
+                    case .lookout: LookoutView { rel in fieldBook.selectedRelativePath = rel; sel = .vault }
+                    case .vault: VaultBrowserView()
                     case .dashboard: DashboardView { s in sel = s }
                     case .overview: OverviewView()
                     case .status: StatusView(s: st)
@@ -113,7 +141,11 @@ struct RootView: View {
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
         .background(Color.tmwBg)
-        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); dashboard.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
+        .onChange(of: scenePhase) { _, phase in
+            // Reconciliation-on-focus (Phase 1 external-change detection).
+            if phase == .active { fieldBook.reconcileOnFocus() }
+        }
+        .toolbar { Button("Refresh", systemImage: "arrow.clockwise") { store.refresh(); bots.refresh(); dashboard.refresh(); fieldBook.refresh(); NotificationCenter.default.post(name: .consoleRefresh, object: nil) }.keyboardShortcut("r") }
     }
 }
 
