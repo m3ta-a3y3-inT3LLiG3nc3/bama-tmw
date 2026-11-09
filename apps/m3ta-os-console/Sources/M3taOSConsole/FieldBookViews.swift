@@ -62,7 +62,7 @@ struct LookoutView: View {
             switch fb.calendar.state {
             case .loading: Text("Loading calendar…").foregroundStyle(.secondary)
             case .accessDenied: Text("Calendar access not granted. The Lookout reads only allowlisted calendars; grant access in System Settings to enable this panel.").foregroundStyle(.orange)
-            case .noAllowlistedCalendar: Text("No allowlisted calendar found. Default posture is business-only (\(fb.config.businessCalendarHint)); personal calendars are never shown unless allowlisted.").foregroundStyle(.orange)
+            case .noAllowlistedCalendar: Text("No allowlisted calendar found. Default posture is business-only (allowlist: \(fb.config.calendarAllowlist.isEmpty ? fb.config.businessCalendarHint : fb.config.calendarAllowlist.joined(separator: ", "))); personal calendars are never shown unless allowlisted.").foregroundStyle(.orange)
             case .synthetic, .ready:
                 if fb.calendar.events.isEmpty {
                     Text("No events today on the allowlisted calendars.").foregroundStyle(.secondary)

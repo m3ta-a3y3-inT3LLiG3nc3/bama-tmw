@@ -183,10 +183,18 @@ private func makeFixtureVault() throws -> URL {
 
 @Suite struct FieldBookConfigTests {
     @Test func calendarAllowlistDefaultsToBusinessOnly() {
+        // Default = the business calendar as titled on the Mac (2026-11-09
+        // Calendar.app recon: "Th3 M3ta Way"; no calendar carries the
+        // business domain in its title).
         let cfg = FieldBookConfig()
-        #expect(cfg.calendarAllowed(title: "info@th3m3taway.com", sourceTitle: "iCloud"))
+        #expect(cfg.calendarAllowed(title: "Th3 M3ta Way", sourceTitle: "Google"))
         #expect(!cfg.calendarAllowed(title: "Family", sourceTitle: "iCloud"))
         #expect(!cfg.calendarAllowed(title: "Personal", sourceTitle: "Google"))
+        #expect(!cfg.calendarAllowed(title: "Builder Brokerz", sourceTitle: "Google"))
+        // Empty allowlist falls back to the business-domain hint.
+        let hinted = FieldBookConfig(calendarAllowlist: [])
+        #expect(hinted.calendarAllowed(title: "info@th3m3taway.com", sourceTitle: "iCloud"))
+        #expect(!hinted.calendarAllowed(title: "Family", sourceTitle: "iCloud"))
         let explicit = FieldBookConfig(calendarAllowlist: ["Ops"])
         #expect(explicit.calendarAllowed(title: "Ops", sourceTitle: ""))
         #expect(!explicit.calendarAllowed(title: "info@th3m3taway.com", sourceTitle: ""))

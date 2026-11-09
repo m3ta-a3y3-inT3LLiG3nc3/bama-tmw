@@ -22,8 +22,11 @@ public struct FieldBookConfig: Codable, Equatable, Sendable {
     /// Week planning file, relative to the vault root (§1.3c convention).
     public var planningWeekRelativePath: String
     /// EventKit calendar titles the Lookout may read (§1.3a allowlist).
-    /// Empty means "business calendar only" via `businessCalendarHint`:
-    /// a calendar qualifies only if its title/source contains the hint.
+    /// Default is the business calendar as it actually exists on the Mac:
+    /// the 2026-11-09 Calendar.app recon listed 40 calendars and none
+    /// carries the business domain in its title — the business calendar
+    /// (info@th3m3taway.com identity) is titled "Th3 M3ta Way". An empty
+    /// list falls back to `businessCalendarHint` matching on title/source.
     public var calendarAllowlist: [String]
     public var businessCalendarHint: String
     /// Files larger than this are listed as oversized in Needs attention
@@ -33,7 +36,7 @@ public struct FieldBookConfig: Codable, Equatable, Sendable {
     public init(vaultRootPath: String = FieldBookConfig.defaultVaultRootPath,
                 scopedSubtrees: [String] = ["00-Inbox", "10-Projects!", "Meetings", "Global-Wiki", "knowledge"],
                 planningWeekRelativePath: String = "planning/week.md",
-                calendarAllowlist: [String] = [],
+                calendarAllowlist: [String] = ["Th3 M3ta Way"],
                 businessCalendarHint: String = "th3m3taway.com",
                 maxFileBytes: Int = 5_000_000) {
         self.vaultRootPath = vaultRootPath
@@ -51,7 +54,10 @@ public struct FieldBookConfig: Codable, Equatable, Sendable {
     /// calendar is allowed only when the business hint matches its title or
     /// its source title. Personal/family calendars never render by default.
     public func calendarAllowed(title: String, sourceTitle: String) -> Bool {
-        if !calendarAllowlist.isEmpty { return calendarAllowlist.contains(title) }
+        if !calendarAllowlist.isEmpty {
+            let t = title.trimmingCharacters(in: .whitespaces).lowercased()
+            return calendarAllowlist.contains { $0.trimmingCharacters(in: .whitespaces).lowercased() == t }
+        }
         let hint = businessCalendarHint.lowercased()
         return title.lowercased().contains(hint) || sourceTitle.lowercased().contains(hint)
     }
