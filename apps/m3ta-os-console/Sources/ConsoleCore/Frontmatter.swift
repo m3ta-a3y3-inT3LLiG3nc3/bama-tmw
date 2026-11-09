@@ -161,8 +161,20 @@ public struct VaultRecord: Codable, Equatable, Sendable, Identifiable {
     public var links: [String]
     public var contentHash: String
     public var sizeBytes: Int
+    // Phase 2 board/editor fields (optional so Phase 1 index files decode).
+    public var tierRaw: String? = nil
+    public var snoozeUntilRaw: String? = nil
+    public var brandRaw: String? = nil
+    public var channelRaw: String? = nil
+    public var dueRaw: String? = nil
+    public var ownerRaw: String? = nil
 
     public var id: String { recordID ?? relativePath }
+
+    /// §3.1: conflict copies (`<name>.conflict-<timestamp>.md`) are excluded
+    /// from boards, the Lookout, and the census; they surface in Needs
+    /// attention until a human resolves them. Nothing auto-merges them.
+    public var isConflictCopy: Bool { relativePath.contains(".conflict-") }
 
     /// Private records never render on the Lookout (any panel).
     public var isLookoutVisible: Bool { classification != .private }
@@ -243,12 +255,24 @@ public struct VaultRecord: Codable, Equatable, Sendable, Identifiable {
         var effective = mtime
         if let u = parse.string("updated"), let d = localDate(u) { effective = max(d, mtime) }
 
-        return VaultRecord(relativePath: relativePath, title: title, recordID: parse.string("id"),
+        var record = VaultRecord(relativePath: relativePath, title: title, recordID: parse.string("id"),
                            typeRaw: typeRaw, statusRaw: statusRaw, classificationRaw: classificationRaw,
                            classification: classification, canonical: canonical, schemaMajor: schemaMajor,
                            isNewerSchema: isNewer, needsAttention: needsAttention, issues: issues,
                            updatedRaw: parse.string("updated"), mtime: mtime, effectiveUpdated: effective,
                            links: links, contentHash: contentHash, sizeBytes: sizeBytes)
+        record.tierRaw = parse.string("tier")
+        record.snoozeUntilRaw = parse.string("snooze_until")
+        record.brandRaw = parse.string("brand")
+        record.channelRaw = parse.string("channel")
+        record.dueRaw = parse.string("due")
+        record.ownerRaw = parse.string("owner")
+        if record.isConflictCopy {
+            record.needsAttention = true
+            record.issues.append("conflict copy — excluded from boards/Lookout; resolve manually, never auto-merged")
+            record.canonical = false
+        }
+        return record
     }
 
     static func firstHeading(in body: String) -> String? {

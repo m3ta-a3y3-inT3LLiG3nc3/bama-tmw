@@ -44,7 +44,18 @@ if [[ -z "$IDENTITY" ]]; then
 fi
 if [[ -n "$IDENTITY" ]]; then
   echo "Signing with Developer ID identity: $IDENTITY"
-  if ! codesign --force --deep --options runtime -s "$IDENTITY" "$APP"; then
+  # NO hardened runtime (--options runtime) — measured root cause,
+  # 2026-11-09: a NON-notarized Developer ID app signed WITH the hardened
+  # runtime gets its TCC privacy prompts silently suppressed on macOS 26
+  # (requestFullAccessToEvents returns false instantly, authorization
+  # status never leaves notDetermined, no prompt, no Settings entry — the
+  # Lookout calendar panel could never be granted). The identical binary
+  # signed Developer ID WITHOUT the runtime option, or ad-hoc, prompts
+  # and grants normally (bisect evidence in the Phase 2 build report).
+  # This build is local-only and never notarized (Phase 1 posture), so
+  # the hardened runtime bought nothing here and cost the permission
+  # flow. If the app is ever notarized for distribution, revisit.
+  if ! codesign --force --deep -s "$IDENTITY" "$APP"; then
     echo "codesign failed in this session. Over SSH the login keychain is not" >&2
     echo "interaction-available (errSecInternalComponent); re-run this script" >&2
     echo "in a local Terminal window on the Mac, where the key is usable." >&2

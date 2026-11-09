@@ -33,9 +33,10 @@ public struct VaultIndexSnapshot: Codable, Equatable, Sendable {
 
     public var needsAttention: [VaultRecord] { records.filter { $0.needsAttention } }
     /// Canonical row (§1.3d): canonical + not private, fail-closed.
-    public var canonicalDocs: [VaultRecord] { records.filter { $0.canonical && $0.isLookoutVisible }.sorted { $0.title < $1.title } }
+    /// Conflict copies never render (§3.1).
+    public var canonicalDocs: [VaultRecord] { records.filter { $0.canonical && $0.isLookoutVisible && !$0.isConflictCopy }.sorted { $0.title < $1.title } }
     /// Everything the Lookout may ever show.
-    public var lookoutVisible: [VaultRecord] { records.filter { $0.isLookoutVisible } }
+    public var lookoutVisible: [VaultRecord] { records.filter { $0.isLookoutVisible && !$0.isConflictCopy } }
 
     /// Deterministic rendering of the vault-fed Lookout content. The
     /// delete-index → rebuild → identical-output acceptance compares this.
@@ -145,10 +146,18 @@ public struct VaultIndexer: Sendable {
             // prefix. The reconciliation fingerprint is
             // hash(size | mtime | prefix) — any edit moves mtime, so a
             // capped prefix cannot mask a change.
-            guard let data = readPrefix(of: url, limit: Self.readPrefixLimit) else {
+            // Phase 2 hardening: the read races a per-file deadline — a
+            // stalled open (e.g. a FIFO, a stuck FileProvider file) must
+            // never stall the pass. Timed-out files land as unreadable
+            // WITH the timeout reason and stay in Needs attention.
+            let read = readPrefixWithTimeout(of: url, limit: Self.readPrefixLimit, timeout: Self.perFileTimeoutSeconds)
+            guard let data = read.data else {
                 log.unreadable += 1
+                let reason = read.timedOut
+                    ? "unreadable file (read timed out after \(Self.perFileTimeoutSeconds)s) — index pass continued"
+                    : "unreadable file (OS error)"
                 records.append(VaultRecord(relativePath: rel, title: (rel as NSString).lastPathComponent,
-                                           needsAttention: true, issues: ["unreadable file (OS error)"],
+                                           needsAttention: true, issues: [reason],
                                            mtime: mtime, effectiveUpdated: mtime, sizeBytes: size))
                 continue
             }
@@ -173,11 +182,29 @@ public struct VaultIndexer: Sendable {
     }
 
     public static let readPrefixLimit = 256 * 1024
+    /// Per-file read deadline for index passes (Phase 2 hardening).
+    public static let perFileTimeoutSeconds: TimeInterval = 2.0
 
     public func readPrefix(of url: URL, limit: Int) -> Data? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         return (try? handle.read(upToCount: limit)) ?? nil
+    }
+
+    /// Race the prefix read against a deadline on a worker queue. On
+    /// timeout the worker thread stays blocked inside the open/read (a
+    /// FIFO open cannot be interrupted) but the PASS completes — that is
+    /// the trade the spec asks for: bounded pass, file visible as failed.
+    public func readPrefixWithTimeout(of url: URL, limit: Int, timeout: TimeInterval) -> (data: Data?, timedOut: Bool) {
+        final class Box: @unchecked Sendable { var data: Data? }
+        let box = Box()
+        let done = DispatchSemaphore(value: 0)
+        DispatchQueue.global(qos: .userInitiated).async {
+            box.data = self.readPrefix(of: url, limit: limit)
+            done.signal()
+        }
+        if done.wait(timeout: .now() + timeout) == .timedOut { return (nil, true) }
+        return (box.data, false)
     }
 
     public func wikilinks(in body: String) -> [String] {

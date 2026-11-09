@@ -45,24 +45,122 @@ final class DashboardStore {
 }
 
 enum Screen: String, CaseIterable, Identifiable {
-    case lookout = "Lookout", vault = "Vault", dashboard = "Dashboard", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
+    case lookout = "Lookout", vault = "Vault", boards = "Boards", ideas = "Ideas", dashboard = "Dashboard", overview = "Overview", status = "Pluto status", pairing = "Pairing", result = "Pairing result", mesh = "Mesh", bots = "Bots", brain = "Brain", copilot = "Copilot"
     var id: String { rawValue }
-    static let groups: [(String, [Screen])] = [("Command", [.lookout, .vault, .dashboard]), ("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
-    var story: String { switch self { case .lookout: "FB-1"; case .vault: "FB-2"; case .dashboard: "M3-DASH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
-    var icon: String { switch self { case .lookout: "binoculars"; case .vault: "folder"; case .dashboard: "gauge"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+    static let groups: [(String, [Screen])] = [("Command", [.lookout, .vault, .boards, .ideas, .dashboard]), ("Home", [.overview]), ("Pluto", [.status, .pairing, .result]), ("Mesh", [.mesh, .bots, .brain]), ("Assist", [.copilot])]
+    var story: String { switch self { case .lookout: "FB-1"; case .vault: "FB-2"; case .boards: "FB-3"; case .ideas: "FB-4"; case .dashboard: "M3-DASH"; case .overview: "M2-HOME"; case .status: "S-001"; case .pairing: "S-002"; case .result: "S-003"; case .mesh: "S-006"; case .bots: "M2-BOTS"; case .brain: "M2-BRAIN"; case .copilot: "S-007" } }
+    var icon: String { switch self { case .lookout: "binoculars"; case .vault: "folder"; case .boards: "rectangle.split.3x1"; case .ideas: "lightbulb"; case .dashboard: "gauge"; case .overview: "square.grid.2x2"; case .status: "antenna.radiowaves.left.and.right"; case .pairing: "link"; case .result: "checkmark.seal"; case .mesh: "square.grid.3x3"; case .bots: "person.3"; case .brain: "brain"; case .copilot: "sparkles" } }
+}
+
+/// Window recovery (Phase 2 defect lane, 2026-11-09): the app was observed
+/// running with ZERO windows after a relaunch (index pass done, nothing on
+/// screen) until a manual reopen. RootView registers an openWindow action
+/// here; the delegate re-presents the main window whenever the app
+/// finishes launching or becomes active with no visible main window.
+enum WindowRecovery {
+    nonisolated(unsafe) static var openMainWindow: (() -> Void)?
+    nonisolated(unsafe) static var fallbackWindow: NSWindow?
+    nonisolated(unsafe) static var windowlessSince: Date?
+    /// Window-recovery debug mirror (same rationale as the calendar
+    /// debug log: the unified log is unreadable on the target Mac).
+    static func wlog(_ message: String) {
+        let line = "\(Date()) WR \(message)\n"
+        let url = URL(fileURLWithPath: "/tmp/console-window-debug.log")
+        if let handle = try? FileHandle(forWritingTo: url) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: Data(line.utf8))
+        } else {
+            try? line.write(to: url, atomically: true, encoding: .utf8)
+        }
+    }
+    @MainActor static func ensureVisibleWindow() {
+        let hasWindow = NSApp.windows.contains { $0.isVisible && $0.canBecomeMain }
+        let frames = NSApp.windows.map { "[\($0.title) vis=\($0.isVisible) frame=\(NSStringFromRect($0.frame)) screen=\($0.screen?.localizedName ?? "nil") space=\($0.collectionBehavior.rawValue)]" }.joined(separator: " ")
+        wlog("ensure: windows=\(NSApp.windows.count) visible=\(NSApp.windows.filter { $0.isVisible }.count) hasWindow=\(hasWindow) openRegistered=\(openMainWindow != nil) fallback=\(fallbackWindow != nil) frames=\(frames)")
+        if hasWindow { windowlessSince = nil; return }
+        NSApp.activate(ignoringOtherApps: true)
+        if let openMainWindow {
+            openMainWindow()
+            windowlessSince = nil
+            return
+        }
+        // Chicken-and-egg case (observed repeatedly 2026-11-09, no
+        // env/launch-mode pattern): the SwiftUI scene never instantiated
+        // its first window, so openWindow was never registered and the
+        // openWindow path can never fire. After a grace period, build a
+        // plain AppKit fallback window hosting the same RootView on its
+        // own store instances — same files, same watcher reconciliation;
+        // a degraded window beats a windowless process.
+        let now = Date()
+        if windowlessSince == nil { windowlessSince = now }
+        guard let since = windowlessSince, now.timeIntervalSince(since) > 4 else { return }
+        wlog("building fallback window")
+        buildFallbackWindow()
+        wlog("fallback built: visible=\(fallbackWindow?.isVisible ?? false)")
+        windowlessSince = nil
+    }
+    @MainActor private static func buildFallbackWindow() {
+        let root = RootView()
+            .environment(Store())
+            .environment(BotStore())
+            .environment(DashboardStore())
+            .environment(ChatRunStore())
+            .environment(FieldBookStore())
+            .frame(minWidth: 960, minHeight: 640)
+            .tint(.m3taGold)
+        let window = NSWindow(contentViewController: NSHostingController(rootView: root))
+        window.title = "M3ta-OS Console"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 1500, height: 950))
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        fallbackWindow = window
+    }
 }
 
 /// Phase 1 fix F4: full-screen Space is the default launch posture,
 /// applied by the app's own code at launch (never restored window state).
 /// CONSOLE_NO_FULLSCREEN=1 is the scripted-probe opt-out (LaunchPosture).
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private var windowWatchdog: Timer?
+    private var activityToken: NSObjectProtocol?
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Hold off App Nap: a windowless/backgrounded console got its
+        // timers (watcher debounce, window watchdog) frozen by App Nap on
+        // 2026-11-09, which is how a lost window stayed lost until a
+        // manual reopen. This is an always-on daily-driver console; a
+        // user-initiated activity assertion is the correct posture.
+        activityToken = ProcessInfo.processInfo.beginActivity(options: .userInitiated,
+                                                              reason: "M3ta-OS Console daily-driver console")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            Task { @MainActor in WindowRecovery.ensureVisibleWindow() }
+        }
+        // Watchdog: this is a single-window daily-driver console; a state
+        // with the process alive and zero visible windows (observed twice
+        // on 2026-11-09, once after a relaunch and once after synthetic
+        // input churn) is never a legitimate end state, so the app
+        // re-presents its main window whenever it is detected.
+        windowWatchdog = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { _ in
+            Task { @MainActor in
+                if !NSApp.windows.contains(where: { $0.isVisible }) {
+                    WindowRecovery.ensureVisibleWindow()
+                }
+            }
+        }
         guard LaunchPosture.shouldLaunchFullScreen(environment: ProcessInfo.processInfo.environment) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
             guard let w = NSApp.windows.first(where: { $0.isVisible }) ?? NSApp.windows.first else { return }
             w.collectionBehavior.insert(.fullScreenPrimary)
             if !w.styleMask.contains(.fullScreen) { w.toggleFullScreen(nil) }
         }
+    }
+    func applicationDidBecomeActive(_ notification: Notification) {
+        Task { @MainActor in WindowRecovery.ensureVisibleWindow() }
+    }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { Task { @MainActor in WindowRecovery.ensureVisibleWindow() } }
+        return true
     }
 }
 
@@ -77,7 +175,7 @@ struct M3taOSConsoleApp: App {
     @AppStorage("appearance") private var appearance = Appearance.dark.rawValue
     init() { NSApplication.shared.setActivationPolicy(.regular) }
     var body: some Scene {
-        WindowGroup("M3ta-OS Console") { RootView().environment(store).environment(bots).environment(dashboard).environment(chatRuns).environment(fieldBook).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
+        WindowGroup("M3ta-OS Console", id: "main") { RootView().environment(store).environment(bots).environment(dashboard).environment(chatRuns).environment(fieldBook).frame(minWidth: 960, minHeight: 640).tint(.m3taGold).preferredColorScheme(Appearance(rawValue: appearance)?.scheme) }
         Settings { SettingsView().environment(store).environment(bots).environment(dashboard) }
     }
 }
@@ -88,16 +186,30 @@ struct RootView: View {
     @Environment(DashboardStore.self) var dashboard
     @Environment(FieldBookStore.self) var fieldBook
     @Environment(\.scenePhase) var scenePhase
-    // Dashboard is the launch default (M3ta's resolve call, 2026-11-02:
-    // the central command center). CONSOLE_SCREEN still selects a screen
-    // for scripted launches, including "Overview".
-    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .dashboard
+    @Environment(\.openWindow) var openWindow
+    // Launch default is the Lookout (Phase 2 defect lane, 2026-11-09,
+    // parent call: a relaunch restoring to Dashboard instead of the
+    // Lookout home surface is a wart; this supersedes the 2026-11-02
+    // Dashboard-default for LAUNCH only — Dashboard stays in the sidebar).
+    // CONSOLE_SCREEN still selects a screen for scripted launches.
+    @State private var sel: Screen? = Screen(rawValue: ProcessInfo.processInfo.environment["CONSOLE_SCREEN"] ?? "") ?? .lookout
     var body: some View {
         NavigationSplitView {
             List(selection: $sel) {
                 BrandHeader().listRowSeparator(.hidden)
                 ForEach(Screen.groups, id: \.0) { g in
-                    Section(g.0) { ForEach(g.1) { s in Label(s.rawValue, systemImage: s.icon).tag(s).accessibilityHint("Shows the \(s.rawValue) screen") } }
+                    Section(g.0) {
+                        ForEach(g.1) { s in
+                            // A real Button per row, not a bare Label: an
+                            // AXPress (or click) on the row's static text
+                            // did not switch surfaces (Phase 2 defect lane);
+                            // buttons are pressable by AX and by mouse alike,
+                            // and the List selection binding still tracks.
+                            Button { sel = s } label: { Label(s.rawValue, systemImage: s.icon) }
+                                .buttonStyle(.plain).tag(s)
+                                .accessibilityHint("Shows the \(s.rawValue) screen")
+                        }
+                    }
                 }
             }
             .navigationSplitViewColumnWidth(min: 190, ideal: 220)
@@ -114,6 +226,14 @@ struct RootView: View {
                 VaultBrowserView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
+            } else if (sel ?? .dashboard) == .boards {
+                BoardsView { rel in fieldBook.openEditor(relativePath: rel); sel = .vault }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
+            } else if (sel ?? .dashboard) == .ideas {
+                IdeasView { rel in fieldBook.openEditor(relativePath: rel); sel = .vault }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .safeAreaInset(edge: .top, spacing: 0) { KenteStripe() }
             } else if (sel ?? .dashboard) == .dashboard {
                 DashboardView { s in sel = s }
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -123,6 +243,8 @@ struct RootView: View {
                     switch sel ?? .overview {
                     case .lookout: LookoutView { rel in fieldBook.selectedRelativePath = rel; sel = .vault }
                     case .vault: VaultBrowserView()
+                    case .boards: BoardsView { rel in fieldBook.openEditor(relativePath: rel); sel = .vault }
+                    case .ideas: IdeasView { rel in fieldBook.openEditor(relativePath: rel); sel = .vault }
                     case .dashboard: DashboardView { s in sel = s }
                     case .overview: OverviewView()
                     case .status: StatusView(s: st)
@@ -141,6 +263,10 @@ struct RootView: View {
             } else { ContentUnavailableView("No state", systemImage: "exclamationmark.triangle", description: Text(store.error ?? "")) }
         }
         .background(Color.tmwBg)
+        // FB_FORCE_FALLBACK=1 is a test-only gate: it suppresses the
+        // openWindow registration so the AppKit fallback window path can
+        // be exercised end to end.
+        .onAppear { if ProcessInfo.processInfo.environment["FB_FORCE_FALLBACK"] != "1" { WindowRecovery.openMainWindow = { openWindow(id: "main") } } }
         .onChange(of: scenePhase) { _, phase in
             // Reconciliation-on-focus (Phase 1 external-change detection).
             if phase == .active { fieldBook.reconcileOnFocus() }
