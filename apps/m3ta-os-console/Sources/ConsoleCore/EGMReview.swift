@@ -245,6 +245,7 @@ public enum EGMReviewClient {
             }
         } catch let f as CopilotClient.Failure {
             switch f {
+            case .missingCredential: throw EGMReviewFailure.http(401)
             case .http(404): throw EGMReviewFailure.agentNotRegistered
             case .http(let status): throw EGMReviewFailure.http(status)
             case .badResponse: throw EGMReviewFailure.badResponse

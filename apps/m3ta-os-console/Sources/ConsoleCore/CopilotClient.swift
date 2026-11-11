@@ -138,7 +138,31 @@ public enum CopilotClient {
         return try! JSONSerialization.data(withJSONObject: o)
     }
 
-    public enum Failure: Error, Sendable, Equatable { case http(Int), badResponse }
+    public enum Failure: Error, Sendable, Equatable { case missingCredential, http(Int), badResponse }
+
+    /// Token for a direct agent run. Empty means the call must not leave the app.
+    public static func currentCredential() -> String {
+        if let env = ProcessInfo.processInfo.environment["CONSOLE_COPILOT_TOKEN"], !env.isEmpty { return env }
+        return UserDefaults.standard.string(forKey: "m3ta.console.copilot.token") ?? ""
+    }
+
+    /// Build the JARVIS run request, or nil when no credential is present.
+    /// A nil result is the boundary: nothing is sent.
+    public static func makeRunRequest(_ e: JarvisEndpoint = .fromDefaults(),
+                                      agentId: String = "default",
+                                      threadId: String,
+                                      messages: [CopilotMessage],
+                                      credential: String,
+                                      timeout: TimeInterval = 120) -> URLRequest? {
+        guard !credential.isEmpty else { return nil }
+        var req = URLRequest(url: e.copilotAgentRun(agentId), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "content-type")
+        req.setValue("text/event-stream", forHTTPHeaderField: "accept")
+        req.setValue("Bearer \(credential)", forHTTPHeaderField: "Authorization")
+        req.httpBody = runBody(threadId: threadId, runId: UUID().uuidString, messages: messages)
+        return req
+    }
 
     static func session(_ t: TimeInterval) -> URLSession {
         let c = URLSessionConfiguration.ephemeral
@@ -154,15 +178,15 @@ public enum CopilotClient {
     public static func run(_ e: JarvisEndpoint = .fromDefaults(),
                            agentId: String = "default",
                            threadId: String, messages: [CopilotMessage],
+                           credential: String = "",
                            timeout: TimeInterval = 120) -> AsyncThrowingStream<CopilotEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    var req = URLRequest(url: e.copilotAgentRun(agentId), cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: timeout)
-                    req.httpMethod = "POST"
-                    req.setValue("application/json", forHTTPHeaderField: "content-type")
-                    req.setValue("text/event-stream", forHTTPHeaderField: "accept")
-                    req.httpBody = runBody(threadId: threadId, runId: UUID().uuidString, messages: messages)
+                    let token = credential.isEmpty ? currentCredential() : credential
+                    guard let req = makeRunRequest(e, agentId: agentId, threadId: threadId, messages: messages, credential: token, timeout: timeout) else {
+                        throw Failure.missingCredential
+                    }
                     let (bytes, resp) = try await session(timeout).bytes(for: req)
                     guard let http = resp as? HTTPURLResponse else { throw Failure.badResponse }
                     guard http.statusCode == 200 else { throw Failure.http(http.statusCode) }

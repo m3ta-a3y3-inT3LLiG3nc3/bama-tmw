@@ -51,10 +51,13 @@ final class ChatRunStore {
         acc.appendUser(CopilotMessage(id: UUID().uuidString, role: .user, content: text))
         acc.fold(.runStarted(threadId: threadId))
         do {
-            for try await ev in CopilotClient.run(threadId: threadId, messages: acc.messages) {
+            for try await ev in CopilotClient.run(threadId: threadId, messages: acc.messages, credential: CopilotClient.currentCredential()) {
                 acc.fold(ev)
             }
             acc.streamEnded()
+        } catch CopilotClient.Failure.missingCredential {
+            connection = .offline("A console session token is required before a run can leave this app.")
+            acc.fold(.runError("missing credential"))
         } catch {
             // A transport failure means JARVIS is unreachable: show the offline card.
             connection = .offline(error.localizedDescription)
