@@ -5,3 +5,7 @@ dist/
 
 # The app stores no secrets and no keys, ever. Keep env files out regardless.
 .env*
+
+# Copilot auth boundary (Node). Not the Mac app build.
+node_modules/
+.test-bundles*
