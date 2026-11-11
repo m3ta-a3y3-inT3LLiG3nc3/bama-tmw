@@ -14,10 +14,10 @@ only**:
   route, `http://127.0.0.1:9782/api/copilotkit/agent/default/run`, and the
   streamed events are folded into the chat. (The top-level `/agui` route on
   the same port is JARVIS's own REA skill dispatcher, not the chat agent.)
-- **No second runtime.** This app starts nothing: no embedded agent, no
-  local CopilotKit server, no channel host. (The stock `copilotkit init`
-  LangGraph/Next.js scaffold that briefly lived in this folder was removed
-  for exactly this reason; it is in git history at 58da1c9 if ever needed.)
+- **No second agent.** The Mac app starts nothing: no embedded LangGraph
+  agent and no channel host. The stock `copilotkit init` scaffold was
+  removed for that reason (git history at 58da1c9). The auth route below is
+  a handler, not that scaffold.
 - Local models first is JARVIS's routing job (Ollama on 127.0.0.1:11434);
   the Models card shows the live route from `GET /api/models`.
 - No cloud keys in the app. No secrets are stored, ever.
@@ -26,6 +26,20 @@ only**:
 - If JARVIS is down, the Copilot screen shows an offline card with Retry;
   the rest of the console (status, pairing, mesh, bots, brain) still works
   from the local snapshot.
+
+## Copilot auth boundary
+
+`src/app/api/copilotkit/[[...slug]]/route.ts` is a CopilotKit 1.79 route for
+this app. It calls `identifyUser` from the signed-in session and refuses
+another caller's thread on read, run, replay, and subscribe. Login and the
+runtime share one registry on `globalThis`, because Next can bundle those
+routes apart. Logout aborts in-flight and not-yet-dispatched agent work.
+Browser sockets are not blanket-blocked: `/api/copilotkit/socket` accepts a
+session and forwards the runtime's AG-UI stream.
+
+This is not a second LangGraph agent and it stores no cloud keys. The Mac
+panel still posts to JARVIS on loopback. That direct ingress is outside this
+boundary.
 
 Implementation: `Sources/ConsoleCore/CopilotClient.swift` (AG-UI client,
 event parser, run accumulator), `Sources/ConsoleCore/JarvisClient.swift`
@@ -38,6 +52,7 @@ and `CopilotHealth.swift` (read-only loopback probes),
 swift build            # debug build
 swift test             # ConsoleCore unit tests
 ./scripts/package.sh   # release build -> dist/M3taOSConsole.app (ad-hoc signed)
+npm test               # Copilot auth boundary
 ```
 
 Ports for the JARVIS endpoints are configurable in Settings (host is
