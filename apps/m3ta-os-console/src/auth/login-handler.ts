@@ -1,21 +1,19 @@
 import { json, unauthorized } from "./http.ts";
+import { readLoginJson } from "./login-body.ts";
 import { authenticate, createSession, revokeToken, sessionFromRequest } from "./registry.ts";
 
 type LoginBody = { userId?: unknown; password?: unknown };
 
 export async function POST(request: Request): Promise<Response> {
-  let body: LoginBody;
-  try {
-    body = (await request.json()) as LoginBody;
-  } catch {
-    return json({ error: "Invalid request body" }, 400);
-  }
+  const read = await readLoginJson(request);
+  if (!read.ok) return read.response;
+  const body = read.value as LoginBody;
   if (typeof body.userId !== "string" || typeof body.password !== "string") {
-    return json({ error: "Invalid request body" }, 400);
+    return json({ error: "Invalid request body", code: "invalid_body" }, 400);
   }
-  const user = authenticate(body.userId, body.password);
-  if (!user) return unauthorized();
-  const session = createSession(user.userId, user.name);
+  const decision = authenticate(body.userId, body.password);
+  if (!decision.ok) return json({ error: decision.error, code: decision.code }, decision.status);
+  const session = createSession(decision.userId, decision.name);
   return json({ token: session.token, userId: session.userId, name: session.name }, 200);
 }
 

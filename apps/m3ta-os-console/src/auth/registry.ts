@@ -41,11 +41,26 @@ type UserRecord = {
   passwordHash: Buffer;
 };
 
+export type IngressOp = "run" | "connect";
+
+export type IngressPermit = {
+  id: string;
+  userId: string;
+  threadId: string;
+  op: IngressOp;
+};
+
+export type CredentialDecision =
+  | { ok: true; userId: string; name: string }
+  | { ok: false; status: 401; code: "unauthorized"; error: "Unauthorized" }
+  | { ok: false; status: 503; code: "credentials_unconfigured"; error: "Credentials are not configured" };
+
 export type AuthRegistry = {
   sessions: Map<string, Session>;
   users: Map<string, UserRecord>;
   threads: Map<string, string>;
   tickets: Map<string, DispatchTicket>;
+  permits: Map<string, IngressPermit>;
   agentWork: AgentWork;
   dispatchBarrier: Promise<void>;
 };
@@ -80,6 +95,7 @@ function createRegistry(): AuthRegistry {
     users: new Map(),
     threads: new Map(),
     tickets: new Map(),
+    permits: new Map(),
     agentWork: defaultAgentWork,
     dispatchBarrier: Promise.resolve(),
   };
@@ -187,11 +203,43 @@ export function openDispatchTicket(userId: string, input: { threadId: string; ru
   return ticket;
 }
 
-export function authenticate(userId: string, password: string): { userId: string; name: string } | null {
+/**
+ * Credential check for one login attempt.
+ * This never throws, and it is not called while the module is loading.
+ * No configured user returns 503. A wrong password returns 401.
+ */
+export function authenticate(userId: string, password: string): CredentialDecision {
   absorbEnvUsers();
+  if (getAuthRegistry().users.size === 0) {
+    return { ok: false, status: 503, code: "credentials_unconfigured", error: "Credentials are not configured" };
+  }
   const user = getAuthRegistry().users.get(userId);
-  if (!user || !passwordMatches(password, user.passwordHash)) return null;
-  return { userId, name: user.name };
+  if (!user || !passwordMatches(password, user.passwordHash)) {
+    return { ok: false, status: 401, code: "unauthorized", error: "Unauthorized" };
+  }
+  return { ok: true, userId, name: user.name };
+}
+
+export function mintPermit(userId: string, threadId: string, op: IngressOp): string {
+  const id = randomBytes(16).toString("hex");
+  getAuthRegistry().permits.set(id, { id, userId, threadId, op });
+  return id;
+}
+
+export class IngressRefusedError extends Error {
+  constructor() {
+    super("direct ingress refused");
+    this.name = "IngressRefusedError";
+  }
+}
+
+/** Single-use. A runner call without a matching permit is direct ingress and is refused. */
+export function consumePermit(id: string, threadId: string, op: IngressOp): boolean {
+  if (!id) return false;
+  const permit = getAuthRegistry().permits.get(id);
+  if (!permit || permit.threadId !== threadId || permit.op !== op) return false;
+  getAuthRegistry().permits.delete(id);
+  return true;
 }
 
 export function setAgentWork(work: AgentWork): void {

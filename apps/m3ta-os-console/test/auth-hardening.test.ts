@@ -31,6 +31,7 @@ function resetState(): void {
   registry.users.clear();
   registry.threads.clear();
   registry.tickets.clear();
+  registry.permits.clear();
   registry.agentWork = defaultAgentWork;
   registry.dispatchBarrier = Promise.resolve();
   ɵGLOBAL_STORE.clear();

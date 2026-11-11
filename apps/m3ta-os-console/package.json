@@ -6,7 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "COPILOTKIT_TELEMETRY_DISABLED=true DO_NOT_TRACK=1 node --experimental-strip-types --test test/auth-hardening.test.ts",
+    "test": "COPILOTKIT_TELEMETRY_DISABLED=true DO_NOT_TRACK=1 node --experimental-strip-types --test --test-concurrency=1 test/auth-hardening.test.ts test/auth-followup.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

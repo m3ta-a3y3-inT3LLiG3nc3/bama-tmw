@@ -37,9 +37,17 @@ routes apart. Logout aborts in-flight and not-yet-dispatched agent work.
 Browser sockets are not blanket-blocked: `/api/copilotkit/socket` accepts a
 session and forwards the runtime's AG-UI stream.
 
-This is not a second LangGraph agent and it stores no cloud keys. The Mac
-panel still posts to JARVIS on loopback. That direct ingress is outside this
-boundary.
+Login refuses a non-JSON or oversized body before reading it, and stops
+reading if the body misses its deadline. A process with no configured
+users answers login with 503 `credentials_unconfigured` instead of throwing
+while the module loads. A wrong password is 401 `unauthorized`. Calling the
+runner directly, without a permit minted by that check, does not run or
+replay a thread.
+
+The Mac panel still posts to JARVIS on loopback. That call now refuses to
+open the network unless a console session token is present
+(`CONSOLE_COPILOT_TOKEN` or the `m3ta.console.copilot.token` default). This
+handler does not sit in front of JARVIS.
 
 Implementation: `Sources/ConsoleCore/CopilotClient.swift` (AG-UI client,
 event parser, run accumulator), `Sources/ConsoleCore/JarvisClient.swift`

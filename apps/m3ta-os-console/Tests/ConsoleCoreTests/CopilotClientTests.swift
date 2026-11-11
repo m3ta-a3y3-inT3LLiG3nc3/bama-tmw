@@ -59,12 +59,21 @@ import Foundation
         #expect(a.error == "model unavailable")
     }
 
+    @Test func directRunWithoutCredentialDoesNotOpenTheNetwork() {
+        let e = JarvisEndpoint(runtimePort: 9, reaPort: 9)
+        let msgs = [CopilotMessage(id: "u", role: .user, content: "hi")]
+        #expect(CopilotClient.makeRunRequest(e, threadId: "t", messages: msgs, credential: "") == nil)
+        let req = CopilotClient.makeRunRequest(e, threadId: "t", messages: msgs, credential: "sess")
+        #expect(req?.value(forHTTPHeaderField: "Authorization") == "Bearer sess")
+        #expect(req?.httpMethod == "POST")
+    }
+
     @Test func closedLoopbackPortRunFails() async {
         // Nothing listens on port 9: the run stream must throw, never hang or fake a reply.
         let e = JarvisEndpoint(runtimePort: 9, reaPort: 9)
         var threw = false
         do {
-            for try await _ in CopilotClient.run(e, threadId: "t", messages: [CopilotMessage(id: "u", role: .user, content: "hi")], timeout: 3) {}
+            for try await _ in CopilotClient.run(e, threadId: "t", messages: [CopilotMessage(id: "u", role: .user, content: "hi")], credential: "loopback-test", timeout: 3) {}
         } catch { threw = true }
         #expect(threw)
     }

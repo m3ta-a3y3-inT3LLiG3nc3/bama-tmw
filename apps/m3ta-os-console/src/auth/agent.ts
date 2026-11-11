@@ -8,14 +8,16 @@ import { getAuthRegistry, openDispatchTicket } from "./registry.ts";
  */
 export class ConsoleAgent extends AbstractAgent {
   readonly userId: string;
+  readonly permitId: string;
 
-  constructor(userId: string) {
+  constructor(userId: string, permitId = "") {
     super({ agentId: "default", description: "M3ta-OS Console" });
     this.userId = userId;
+    this.permitId = permitId;
   }
 
   override clone(): ConsoleAgent {
-    const copy = new ConsoleAgent(this.userId);
+    const copy = new ConsoleAgent(this.userId, this.permitId);
     copy.threadId = this.threadId;
     copy.messages = [...this.messages];
     copy.state = this.state;
