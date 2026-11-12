@@ -44,10 +44,23 @@ while the module loads. A wrong password is 401 `unauthorized`. Calling the
 runner directly, without a permit minted by that check, does not run or
 replay a thread.
 
-The Mac panel still posts to JARVIS on loopback. That call now refuses to
-open the network unless a console session token is present
-(`CONSOLE_COPILOT_TOKEN` or the `m3ta.console.copilot.token` default). This
-handler does not sit in front of JARVIS.
+Sessions, thread owners, and one-time run passes are rows in a SQLite file
+(`node:sqlite`, already in Node). The default file is
+`~/Library/Application Support/M3taOS/console-auth.sqlite`, the console's
+existing local support directory. `CONSOLE_AUTH_DB` overrides it. Two
+processes that point at the same file see the same login and the same
+revocation. Abort signals stay in the process that is running the agent.
+
+The Mac panel still posts to JARVIS on loopback. That call refuses to open
+the network unless a console session token is present
+(`CONSOLE_COPILOT_TOKEN` or the `m3ta.console.copilot.token` default).
+JARVIS itself is not in this repo. The spec places it at
+`m3ta-os-mvp-m2/apps/jarvis-hud` (Tauri, owner K0Ad33), listening on
+127.0.0.1:9782. That process is not on this machine and is not a GitHub
+repo this workspace can see, so it still accepts a run with no token.
+The route in this repo rejects a missing, unknown, or revoked session
+before any agent work. JARVIS has to apply that same check before it
+will fail closed.
 
 Implementation: `Sources/ConsoleCore/CopilotClient.swift` (AG-UI client,
 event parser, run accumulator), `Sources/ConsoleCore/JarvisClient.swift`

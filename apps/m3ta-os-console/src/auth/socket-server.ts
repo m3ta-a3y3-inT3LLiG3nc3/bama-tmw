@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
 import { handleRuntime } from "./runtime-handler.ts";
-import { getAuthRegistry, ownsThread, sessionFromToken } from "./registry.ts";
+import { ownsThread, sessionFromToken, threadOwner } from "./registry.ts";
 
 /**
  * Authenticated socket for the runtime stream.
@@ -113,7 +113,7 @@ export function startAuthServer(host = "127.0.0.1"): Promise<AuthSocketServer> {
       rejectUpgrade(socket, 401, "Unauthorized");
       return;
     }
-    const owner = getAuthRegistry().threads.get(threadId);
+    const owner = threadOwner(threadId);
     if (!threadId || (owner !== undefined && !ownsThread(session.userId, threadId))) {
       rejectUpgrade(socket, 403, "Forbidden");
       return;

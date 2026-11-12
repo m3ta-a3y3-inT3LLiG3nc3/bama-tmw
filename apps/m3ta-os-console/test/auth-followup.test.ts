@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { beforeEach, describe, test } from "node:test";
 import type { BaseEvent, RunAgentInput } from "@ag-ui/client";
 import { ɵGLOBAL_STORE } from "@copilotkit/runtime/v2";
@@ -9,19 +12,19 @@ import {
   defaultAgentWork,
   getAuthRegistry,
   registerUser,
+  resetDurableAuth,
   setAgentWork,
 } from "../src/auth/registry.ts";
 import { getRuntime } from "../src/auth/runtime-handler.ts";
 
+process.env.CONSOLE_AUTH_DB = path.join(mkdtempSync(path.join(tmpdir(), "m3ta-auth-followup-")), "auth.sqlite");
+
 const SECRET = "direct-ingress-secret";
 
 function resetState(): void {
+  resetDurableAuth();
   const registry = getAuthRegistry();
-  registry.sessions.clear();
-  registry.users.clear();
-  registry.threads.clear();
   registry.tickets.clear();
-  (registry as { permits?: { clear: () => void } }).permits?.clear();
   registry.agentWork = defaultAgentWork;
   registry.dispatchBarrier = Promise.resolve();
   delete process.env.CONSOLE_AUTH_USERS;

@@ -1,14 +1,28 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import type { BaseEvent, RunAgentInput } from "@ag-ui/client";
+import {
+  claimThreadRow,
+  consumePermitRow,
+  findSession,
+  findUser,
+  insertPermit,
+  insertSession,
+  markSessionRevoked,
+  resetDurableAuth,
+  threadOwner,
+  upsertUser,
+  userCount,
+  userExists,
+} from "./auth-store.ts";
 
 /**
- * One registry for every copy of this module in the process.
+ * Process-local run state.
  *
- * Next.js bundles the login route and the Copilot runtime route separately,
- * so a Map declared at module scope is a different Map in each bundle.
- * `globalThis` is shared by those bundles. Sessions, thread owners, and
- * in-flight dispatch tickets have to live here or logout and revocation
- * diverge.
+ * Sessions, users, thread owners, and one-time passes are in the SQLite file
+ * opened by auth-store.ts, so two processes see the same login and the same
+ * revocation. Abort tickets stay here: an AbortSignal does not cross a
+ * process boundary. `globalThis` still matters for route bundles inside one
+ * process, which would otherwise each have their own ticket map.
  */
 const REGISTRY_KEY = Symbol.for("m3ta.console.copilot.auth.v1");
 
@@ -36,11 +50,6 @@ export type AgentWork = (
   emit: (event: BaseEvent) => void,
 ) => Promise<void>;
 
-type UserRecord = {
-  name: string;
-  passwordHash: Buffer;
-};
-
 export type IngressOp = "run" | "connect";
 
 export type IngressPermit = {
@@ -56,11 +65,7 @@ export type CredentialDecision =
   | { ok: false; status: 503; code: "credentials_unconfigured"; error: "Credentials are not configured" };
 
 export type AuthRegistry = {
-  sessions: Map<string, Session>;
-  users: Map<string, UserRecord>;
-  threads: Map<string, string>;
   tickets: Map<string, DispatchTicket>;
-  permits: Map<string, IngressPermit>;
   agentWork: AgentWork;
   dispatchBarrier: Promise<void>;
 };
@@ -91,15 +96,13 @@ export async function defaultAgentWork(
 
 function createRegistry(): AuthRegistry {
   return {
-    sessions: new Map(),
-    users: new Map(),
-    threads: new Map(),
     tickets: new Map(),
-    permits: new Map(),
     agentWork: defaultAgentWork,
     dispatchBarrier: Promise.resolve(),
   };
 }
+
+export { resetDurableAuth, threadOwner };
 
 export function getAuthRegistry(): AuthRegistry {
   const root = globalThis as typeof globalThis & Record<symbol, AuthRegistry | undefined>;
@@ -120,7 +123,7 @@ function passwordMatches(password: string, expected: Buffer): boolean {
 }
 
 export function registerUser(userId: string, password: string, name = userId): void {
-  getAuthRegistry().users.set(userId, { name, passwordHash: hashPassword(password) });
+  upsertUser(userId, name, hashPassword(password).toString("hex"));
 }
 
 /** Request-time only. A missing value does not throw at import. */
@@ -133,7 +136,7 @@ export function absorbEnvUsers(): void {
     const userId = pair.slice(0, splitAt).trim();
     const password = pair.slice(splitAt + 1);
     if (!userId || !password) continue;
-    if (!getAuthRegistry().users.has(userId)) registerUser(userId, password, userId);
+    if (!userExists(userId)) registerUser(userId, password, userId);
   }
 }
 
@@ -144,13 +147,13 @@ export function createSession(userId: string, name: string): Session {
     name,
     revoked: false,
   };
-  getAuthRegistry().sessions.set(session.token, session);
+  insertSession(session.token, session.userId, session.name);
   return session;
 }
 
 export function sessionFromToken(token: string): Session | null {
   if (!token) return null;
-  const session = getAuthRegistry().sessions.get(token);
+  const session = findSession(token);
   if (!session || session.revoked) return null;
   return session;
 }
@@ -162,9 +165,9 @@ export function sessionFromRequest(request: Request): Session | null {
 }
 
 export function revokeToken(token: string): boolean {
-  const session = getAuthRegistry().sessions.get(token);
+  const session = findSession(token);
   if (!session || session.revoked) return false;
-  session.revoked = true;
+  if (!markSessionRevoked(token)) return false;
   for (const ticket of getAuthRegistry().tickets.values()) {
     if (ticket.userId === session.userId && (ticket.phase === "pending" || ticket.phase === "dispatched")) {
       ticket.abort();
@@ -174,17 +177,11 @@ export function revokeToken(token: string): boolean {
 }
 
 export function ownsThread(userId: string, threadId: string): boolean {
-  return getAuthRegistry().threads.get(threadId) === userId;
+  return threadOwner(threadId) === userId;
 }
 
 export function claimThread(userId: string, threadId: string): "claimed" | "owned" | "foreign" {
-  const threads = getAuthRegistry().threads;
-  const owner = threads.get(threadId);
-  if (owner === undefined) {
-    threads.set(threadId, userId);
-    return "claimed";
-  }
-  return owner === userId ? "owned" : "foreign";
+  return claimThreadRow(userId, threadId);
 }
 
 export function openDispatchTicket(userId: string, input: { threadId: string; runId: string }): DispatchTicket {
@@ -210,11 +207,11 @@ export function openDispatchTicket(userId: string, input: { threadId: string; ru
  */
 export function authenticate(userId: string, password: string): CredentialDecision {
   absorbEnvUsers();
-  if (getAuthRegistry().users.size === 0) {
+  if (userCount() === 0) {
     return { ok: false, status: 503, code: "credentials_unconfigured", error: "Credentials are not configured" };
   }
-  const user = getAuthRegistry().users.get(userId);
-  if (!user || !passwordMatches(password, user.passwordHash)) {
+  const user = findUser(userId);
+  if (!user || !passwordMatches(password, Buffer.from(user.passwordHashHex, "hex"))) {
     return { ok: false, status: 401, code: "unauthorized", error: "Unauthorized" };
   }
   return { ok: true, userId, name: user.name };
@@ -222,7 +219,7 @@ export function authenticate(userId: string, password: string): CredentialDecisi
 
 export function mintPermit(userId: string, threadId: string, op: IngressOp): string {
   const id = randomBytes(16).toString("hex");
-  getAuthRegistry().permits.set(id, { id, userId, threadId, op });
+  insertPermit({ id, userId, threadId, op });
   return id;
 }
 
@@ -236,10 +233,7 @@ export class IngressRefusedError extends Error {
 /** Single-use. A runner call without a matching permit is direct ingress and is refused. */
 export function consumePermit(id: string, threadId: string, op: IngressOp): boolean {
   if (!id) return false;
-  const permit = getAuthRegistry().permits.get(id);
-  if (!permit || permit.threadId !== threadId || permit.op !== op) return false;
-  getAuthRegistry().permits.delete(id);
-  return true;
+  return consumePermitRow(id, threadId, op);
 }
 
 export function setAgentWork(work: AgentWork): void {

@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtempSync } from "node:fs";
 import { cp, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, beforeEach, describe, test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -14,24 +16,23 @@ import {
   defaultAgentWork,
   getAuthRegistry,
   registerUser,
+  resetDurableAuth,
   setAgentWork,
   setDispatchBarrier,
   type AgentWork,
 } from "../src/auth/registry.ts";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+process.env.CONSOLE_AUTH_DB = path.join(mkdtempSync(path.join(tmpdir(), "m3ta-auth-hardening-")), "auth.sqlite");
 const SECRET = "ada-private-thread-body";
 const AFTER_LOGOUT = "AFTER_LOGOUT_SECRET";
 
 type FetchHandler = (request: Request) => Promise<Response>;
 
 function resetState(): void {
+  resetDurableAuth();
   const registry = getAuthRegistry();
-  registry.sessions.clear();
-  registry.users.clear();
-  registry.threads.clear();
   registry.tickets.clear();
-  registry.permits.clear();
   registry.agentWork = defaultAgentWork;
   registry.dispatchBarrier = Promise.resolve();
   ɵGLOBAL_STORE.clear();
